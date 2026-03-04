@@ -85,6 +85,27 @@
       letter-spacing: .5px;
     }
 
+    .streak-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(251,191,36,.07);
+      border: 1px solid rgba(251,191,36,.2);
+      border-radius: 12px;
+      padding: 10px 18px;
+      margin-bottom: 20px;
+      font-size: .9em;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .streak-banner .streak-num {
+      font-size: 1.5em;
+      font-weight: 900;
+      line-height: 1;
+    }
+
     .stats-row {
       display: flex;
       gap: 10px;
@@ -118,6 +139,12 @@
       margin-top: 4px;
     }
 
+    .home-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     /* ── BUTTONS ── */
     .btn {
       display: block;
@@ -139,6 +166,18 @@
       color: #60a5fa;
     }
     .btn-primary:hover { background: rgba(96,165,250,.25); transform: translateY(-1px); }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+      color: #94a3b8;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.08); transform: translateY(-1px); }
 
     .btn-show {
       background: rgba(192,132,252,.12);
@@ -147,6 +186,41 @@
       margin-top: 20px;
     }
     .btn-show:hover { background: rgba(192,132,252,.22); transform: translateY(-1px); }
+
+    .btn-hint {
+      display: block;
+      width: 100%;
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px dashed rgba(96,165,250,.22);
+      background: transparent;
+      color: rgba(96,165,250,.5);
+      font-family: inherit;
+      font-size: .82em;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all .18s;
+      letter-spacing: .3px;
+    }
+    .btn-hint:hover { border-color: rgba(96,165,250,.5); color: rgba(96,165,250,.85); }
+
+    /* ── KEYBOARD HINT ── */
+    .kbd-hint {
+      text-align: center;
+      color: #334155;
+      font-size: .73em;
+      margin-top: 14px;
+      letter-spacing: .4px;
+    }
+    .kbd {
+      display: inline-block;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 1em;
+    }
 
     /* ── PROGRESS ── */
     .progress-bar-wrap {
@@ -184,6 +258,19 @@
       margin-top: 6px;
       color: #94a3b8;
       font-size: 1.05rem;
+      letter-spacing: .4px;
+      min-height: 1.6em;
+      transition: opacity .25s ease;
+    }
+    .pinyin.hidden { opacity: 0; }
+
+    .card-counter {
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      font-size: .72em;
+      color: #475569;
+      font-weight: 600;
       letter-spacing: .4px;
     }
 
@@ -473,14 +560,120 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── DONE ── */
+    /* ── DONE SCREEN ── */
     .done-emoji { font-size: 4rem; text-align: center; margin-bottom: 16px; }
     .done-title { font-size: 1.8rem; font-weight: 800; color: rgba(96,165,250,.9); text-align: center; margin-bottom: 8px; }
     .done-sub   { color: #94a3b8; text-align: center; font-size: 0.95em; margin-bottom: 28px; line-height: 1.6; }
 
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .session-stat {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .session-stat .s-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .session-stat .s-label {
+      font-size: .65em;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-top: 4px;
+    }
+
+    .s-green { color: #34d399; }
+    .s-blue  { color: #60a5fa; }
+    .s-amber { color: #fbbf24; }
+
+    /* ── BROWSE ── */
+    .browse-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .browse-back {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 10px;
+      color: #94a3b8;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .9em;
+      transition: all .2s;
+    }
+    .browse-back:hover { background: rgba(255,255,255,.1); color: #f1f5f9; }
+
+    .browse-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .browse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+    }
+
+    .browse-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+
+    .browse-card:hover {
+      background: rgba(96,165,250,.1);
+      border-color: rgba(96,165,250,.3);
+      transform: translateY(-2px);
+    }
+
+    .browse-card .bc-hanzi {
+      font-size: 2rem;
+      font-weight: 900;
+      color: rgba(96,165,250,.88);
+      line-height: 1;
+    }
+
+    .browse-card .bc-pinyin {
+      font-size: .7em;
+      color: #64748b;
+      margin-top: 5px;
+    }
+
+    .browse-card .bc-badge {
+      width: 8px; height: 8px;
+      border-radius: 99px;
+      margin: 6px auto 0;
+    }
+
+    .badge-new    { background: #60a5fa; }
+    .badge-due    { background: #fb923c; }
+    .badge-learned{ background: #34d399; }
+
     @media (max-width: 420px) {
       .rating-btn { font-size: 0.78em; padding: 11px 4px; }
       .meaning-map .char::after, .meaning-map .word::after { max-width: min(88vw,420px); font-size: .50em; }
+      .session-stats { grid-template-columns: repeat(3,1fr); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -496,6 +689,11 @@
       <div class="card-box" style="max-width:480px;">
         <div class="home-title">汉字</div>
         <div class="home-subtitle">Spaced Repetition Flashcards</div>
+        <div class="streak-banner" id="streak-banner">
+          <span>🔥</span>
+          <span class="streak-num" id="streak-num">0</span>
+          <span>day streak</span>
+        </div>
         <div class="stats-row">
           <div class="stat-pill">
             <div class="stat-num" id="stat-due">0</div>
@@ -503,14 +701,17 @@
           </div>
           <div class="stat-pill">
             <div class="stat-num" id="stat-total">0</div>
-            <div class="stat-label">Total Cards</div>
+            <div class="stat-label">Total</div>
           </div>
           <div class="stat-pill">
             <div class="stat-num" id="stat-learned">0</div>
             <div class="stat-label">Learned</div>
           </div>
         </div>
-        <button class="btn btn-primary" id="btn-start">Start Review →</button>
+        <div class="home-actions">
+          <button class="btn btn-primary" id="btn-start">Start Review →</button>
+          <button class="btn btn-secondary" id="btn-browse">Browse All Cards</button>
+        </div>
       </div>
     </div>
   </div>
@@ -522,9 +723,10 @@
         <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
       </div>
       <div class="card-box">
+        <div class="card-counter" id="card-counter"></div>
         <div class="char-display">
           <div class="hanzi" id="front-hanzi"></div>
-          <div class="pinyin" id="front-pinyin"></div>
+          <div class="pinyin hidden" id="front-pinyin"></div>
         </div>
         <div class="canvas-wrapper">
           <canvas id="drawingCanvas" width="420" height="420"></canvas>
@@ -536,7 +738,9 @@
           <button id="clearDrawBtn" class="draw-btn"
             style="background:rgba(255,60,60,0.1);border-color:rgba(255,60,60,0.2);">Clear</button>
         </div>
-        <button class="btn btn-show" id="btn-show-answer">Show Answer</button>
+        <button class="btn-hint" id="btn-pinyin-hint">Show Pinyin</button>
+        <button class="btn btn-show" id="btn-show-answer">Show Answer <span style="opacity:.5;font-weight:400;font-size:.85em">Space</span></button>
+        <div class="kbd-hint">Rate: <span class="kbd">1</span> Again &nbsp; <span class="kbd">2</span> Hard &nbsp; <span class="kbd">3</span> Good &nbsp; <span class="kbd">4</span> Easy</div>
       </div>
     </div>
   </div>
@@ -548,6 +752,7 @@
         <div class="progress-bar-fill" id="progress-fill-back" style="width:0%"></div>
       </div>
       <div class="card-box">
+        <div class="card-counter" id="card-counter-back"></div>
         <div class="meaning-map" id="meaning-map-content"></div>
         <div class="rating-row">
           <button class="rating-btn btn-again" data-rating="0">Again<span class="ivl" id="ivl-again"></span></button>
@@ -555,6 +760,7 @@
           <button class="rating-btn btn-good"  data-rating="2">Good<span  class="ivl" id="ivl-good"></span></button>
           <button class="rating-btn btn-easy"  data-rating="3">Easy<span  class="ivl" id="ivl-easy"></span></button>
         </div>
+        <div class="kbd-hint" style="margin-top:12px"><span class="kbd">1</span> Again &nbsp; <span class="kbd">2</span> Hard &nbsp; <span class="kbd">3</span> Good &nbsp; <span class="kbd">4</span> Easy</div>
       </div>
     </div>
   </div>
@@ -563,10 +769,37 @@
   <div id="screen-done" class="screen">
     <div class="wrapper">
       <div class="card-box" style="max-width:480px;">
-        <div class="done-emoji">🎉</div>
-        <div class="done-title">All done!</div>
-        <div class="done-sub">No more cards due today.<br>Come back tomorrow!</div>
+        <div class="done-emoji" id="done-emoji">🎉</div>
+        <div class="done-title" id="done-title">Session Complete!</div>
+        <div class="done-sub" id="done-sub">Come back tomorrow for your next review.</div>
+        <div class="session-stats">
+          <div class="session-stat">
+            <div class="s-num s-blue" id="sess-total">0</div>
+            <div class="s-label">Reviewed</div>
+          </div>
+          <div class="session-stat">
+            <div class="s-num s-green" id="sess-good">0</div>
+            <div class="s-label">Correct</div>
+          </div>
+          <div class="session-stat">
+            <div class="s-num s-amber" id="sess-pct">0%</div>
+            <div class="s-label">Accuracy</div>
+          </div>
+        </div>
         <button class="btn btn-primary" id="btn-home">← Back to Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ BROWSE ══════════════ -->
+  <div id="screen-browse" class="screen">
+    <div class="wrapper">
+      <div class="card-box" style="max-width:600px;">
+        <div class="browse-header">
+          <button class="browse-back" id="btn-browse-back">← Back</button>
+          <div class="browse-title">All Cards</div>
+        </div>
+        <div class="browse-grid" id="browse-grid"></div>
       </div>
     </div>
   </div>
@@ -576,8 +809,7 @@
   <script>
   // ════════════════════════════════════════════════════════════════
   //  CARD DATA
-  //  To add a new card: copy one entry below and fill in your data.
-  //  The backHTML supports the full char/word tooltip system.
+  //  To add a new card: copy one entry and fill in your data.
   // ════════════════════════════════════════════════════════════════
   const CARDS = [
 
@@ -591,7 +823,6 @@
           <div class="subhead">duì • Meaning Map</div>
         </div>
         <div class="divider"></div>
-
         <div class="meaning-item">
           <span class="label">1. Correct / Right</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="这个答案是对的。">
@@ -604,7 +835,6 @@
           <div class="pinyin-line"><span class="py">Zhège</span> <span class="py">dá'àn</span> <span class="py">shì</span> <span class="py">duì</span> <span class="py">de.</span></div>
           <div class="translation-line">This answer is correct.</div>
         </div>
-
         <div class="meaning-item">
           <span class="label">2. Verb: To face / treat / reply</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="他对我笑了笑。">
@@ -616,7 +846,6 @@
           <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">wǒ</span> <span class="py">xiàole</span> <span class="py">xiào.</span></div>
           <div class="translation-line">He smiled at me.</div>
         </div>
-
         <div class="meaning-item">
           <span class="label">3. Preposition: Regarding / toward</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="他对音乐很感兴趣。">
@@ -630,7 +859,6 @@
           <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">yīnyuè</span> <span class="py">hěn</span> <span class="py">gǎn</span> <span class="py">xìngqù.</span></div>
           <div class="translation-line">He is very interested in music.</div>
         </div>
-
         <div class="meaning-item">
           <span class="label">4. Classifier: For Pairs</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="那是一对夫妻。">
@@ -641,9 +869,8 @@
             </div>
           </div>
           <div class="pinyin-line"><span class="py">Nà</span> <span class="py">shì</span> <span class="py">yī</span> <span class="py">duì</span> <span class="py">fūqī.</span></div>
-          <div class="translation-line">That is a pair (couple).</div>
+          <div class="translation-line">That is a pair / couple.</div>
         </div>
-
         <div class="meaning-item" style="margin-bottom:0">
           <span class="label">5. Common Usage</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="对不起，我迟到了。">
@@ -660,9 +887,6 @@
       `
     },
 
-    // ── ADD MORE CARDS BELOW ────────────────────────────────────────
-    // Copy the block above, change id/hanzi/pinyin/backHTML, done!
-
     {
       id: 'hao',
       hanzi: '好',
@@ -673,7 +897,6 @@
           <div class="subhead">hǎo • Meaning Map</div>
         </div>
         <div class="divider"></div>
-
         <div class="meaning-item">
           <span class="label">1. Good / Fine / Well</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="今天天气很好。">
@@ -686,7 +909,6 @@
           <div class="pinyin-line"><span class="py">Jīntiān</span> <span class="py">tiānqì</span> <span class="py">hěn</span> <span class="py">hǎo.</span></div>
           <div class="translation-line">Today's weather is very good.</div>
         </div>
-
         <div class="meaning-item">
           <span class="label">2. Greeting: Hello</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="你好！">
@@ -697,9 +919,8 @@
           <div class="pinyin-line"><span class="py">Nǐ</span> <span class="py">hǎo!</span></div>
           <div class="translation-line">Hello! (lit. "You good!")</div>
         </div>
-
         <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. Easy to do</span>
+          <span class="label">3. Easy to do (好 + Verb)</span>
           <div class="sentence-wrap" data-clickcopy="true" data-copy="这道题很好做。">
             <div class="sentence-box">
               <span class="char" data-m="zhè (this)">这</span>
@@ -711,7 +932,296 @@
           <div class="translation-line">This problem is easy to do.</div>
         </div>
       `
-    }
+    },
+
+    {
+      id: 'wo',
+      hanzi: '我',
+      pinyin: 'wǒ',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">我</div>
+          <div class="subhead">wǒ • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. I / Me (1st person singular)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我是学生。">
+            <div class="sentence-box">
+              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="shì (am)">是</span>
+              <span class="word" data-m="WORD: xuéshēng (student)"><span class="char" data-m="xué (study)">学</span><span class="char" data-m="shēng (born)">生</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">shì</span> <span class="py">xuéshēng.</span></div>
+          <div class="translation-line">I am a student.</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. My / Mine (我的)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="这是我的书。">
+            <div class="sentence-box">
+              <span class="char" data-m="zhè (this)">这</span><span class="char" data-m="shì (is)">是</span>
+              <span class="word" data-m="POSSESSIVE: wǒde (my)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="de (particle)">的</span></span>
+              <span class="char" data-m="shū (book)">书</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">shì</span> <span class="py">wǒde</span> <span class="py">shū.</span></div>
+          <div class="translation-line">This is my book.</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. We / Us (我们)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我们去吃饭吧。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: wǒmen (we)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="men (plural)">们</span></span>
+              <span class="char" data-m="qù (go)">去</span>
+              <span class="word" data-m="WORD: chīfàn (eat)"><span class="char" data-m="chī (eat)">吃</span><span class="char" data-m="fàn (meal)">饭</span></span>
+              <span class="char" data-m="ba (suggestion)">吧</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒmen</span> <span class="py">qù</span> <span class="py">chīfàn</span> <span class="py">ba.</span></div>
+          <div class="translation-line">Let's go eat.</div>
+        </div>
+      `
+    },
+
+    {
+      id: 'ni',
+      hanzi: '你',
+      pinyin: 'nǐ',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">你</div>
+          <div class="subhead">nǐ • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. You (singular, informal)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="你叫什么名字？">
+            <div class="sentence-box">
+              <span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="jiào (called)">叫</span>
+              <span class="word" data-m="PHRASE: shénme míngzi (what name)"><span class="char" data-m="shén (what)">什</span><span class="char" data-m="me (suffix)">么</span><span class="char" data-m="míng (name)">名</span><span class="char" data-m="zi (suffix)">字</span></span>？
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nǐ</span> <span class="py">jiào</span> <span class="py">shénme</span> <span class="py">míngzi?</span></div>
+          <div class="translation-line">What is your name?</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. Your / Yours (你的)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="你的手机在哪里？">
+            <div class="sentence-box">
+              <span class="word" data-m="POSSESSIVE: nǐde (your)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="de (particle)">的</span></span>
+              <span class="word" data-m="WORD: shǒujī (mobile phone)"><span class="char" data-m="shǒu (hand)">手</span><span class="char" data-m="jī (machine)">机</span></span>
+              <span class="char" data-m="zài (at)">在</span>
+              <span class="word" data-m="PHRASE: nǎlǐ (where)"><span class="char" data-m="nǎ (which)">哪</span><span class="char" data-m="lǐ (inside)">里</span></span>？
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nǐde</span> <span class="py">shǒujī</span> <span class="py">zài</span> <span class="py">nǎlǐ?</span></div>
+          <div class="translation-line">Where is your phone?</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. You all (你们)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="你们好！">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: nǐmen (you all)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="men (plural)">们</span></span>
+              <span class="char" data-m="hǎo (good)">好</span>！
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nǐmen</span> <span class="py">hǎo!</span></div>
+          <div class="translation-line">Hello everyone!</div>
+        </div>
+      `
+    },
+
+    {
+      id: 'shi',
+      hanzi: '是',
+      pinyin: 'shì',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">是</div>
+          <div class="subhead">shì • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. To be (am / is / are)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="他是老师。">
+            <div class="sentence-box">
+              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="shì (is)">是</span>
+              <span class="word" data-m="WORD: lǎoshī (teacher)"><span class="char" data-m="lǎo (old)">老</span><span class="char" data-m="shī (master)">师</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">shì</span> <span class="py">lǎoshī.</span></div>
+          <div class="translation-line">He is a teacher.</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. Negation: 不是 (is not)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="这不是我的。">
+            <div class="sentence-box">
+              <span class="char" data-m="zhè (this)">这</span>
+              <span class="word" data-m="PHRASE: bú shì (is not)"><span class="char" data-m="bù (not)">不</span><span class="char" data-m="shì (is)">是</span></span>
+              <span class="word" data-m="POSSESSIVE: wǒde (mine)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="de (particle)">的</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">bú shì</span> <span class="py">wǒde.</span></div>
+          <div class="translation-line">This is not mine.</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. Yes / That's right</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="是的，我明白了。">
+            <div class="sentence-box">
+              <span class="word" data-m="PHRASE: shìde (yes)"><span class="char" data-m="shì (yes)">是</span><span class="char" data-m="de (particle)">的</span></span>，
+              <span class="char" data-m="wǒ (I)">我</span>
+              <span class="word" data-m="WORD: míngbai (understand)"><span class="char" data-m="míng (clear)">明</span><span class="char" data-m="bai (white)">白</span></span>
+              <span class="char" data-m="le (change)">了</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Shìde,</span> <span class="py">wǒ</span> <span class="py">míngbai</span> <span class="py">le.</span></div>
+          <div class="translation-line">Yes, I understand now.</div>
+        </div>
+      `
+    },
+
+    {
+      id: 'bu',
+      hanzi: '不',
+      pinyin: 'bù / bú',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">不</div>
+          <div class="subhead">bù • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. No / Not (general negation)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我不知道。">
+            <div class="sentence-box">
+              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="bù (not)">不</span>
+              <span class="word" data-m="WORD: zhīdào (know)"><span class="char" data-m="zhī (know)">知</span><span class="char" data-m="dào (way)">道</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">bù</span> <span class="py">zhīdào.</span></div>
+          <div class="translation-line">I don't know.</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. Tone sandhi: 不 + 4th tone → bú</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我不去。">
+            <div class="sentence-box">
+              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="bú (not)">不</span><span class="char" data-m="qù (go)">去</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">bú</span> <span class="py">qù.</span></div>
+          <div class="translation-line">I'm not going.</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. Negating adjectives</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="今天不冷。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: jīntiān (today)"><span class="char" data-m="jīn (now)">今</span><span class="char" data-m="tiān (day)">天</span></span>
+              <span class="char" data-m="bù (not)">不</span><span class="char" data-m="lěng (cold)">冷</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Jīntiān</span> <span class="py">bù</span> <span class="py">lěng.</span></div>
+          <div class="translation-line">Today is not cold.</div>
+        </div>
+      `
+    },
+
+    {
+      id: 'ren',
+      hanzi: '人',
+      pinyin: 'rén',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">人</div>
+          <div class="subhead">rén • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. Person / People</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="那个人是谁？">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: nàge (that)"><span class="char" data-m="nà (that)">那</span><span class="char" data-m="ge (measure)">个</span></span>
+              <span class="char" data-m="rén (person)">人</span>
+              <span class="char" data-m="shì (is)">是</span>
+              <span class="char" data-m="shuí (who)">谁</span>？
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nàge</span> <span class="py">rén</span> <span class="py">shì</span> <span class="py">shuí?</span></div>
+          <div class="translation-line">Who is that person?</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. In compound words</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="中国人很勤劳。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: zhōngguórén (Chinese person)"><span class="char" data-m="zhōng (middle)">中</span><span class="char" data-m="guó (country)">国</span><span class="char" data-m="rén (person)">人</span></span>
+              <span class="char" data-m="hěn (very)">很</span>
+              <span class="word" data-m="WORD: qínláo (hardworking)"><span class="char" data-m="qín (diligent)">勤</span><span class="char" data-m="láo (labor)">劳</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhōngguórén</span> <span class="py">hěn</span> <span class="py">qínláo.</span></div>
+          <div class="translation-line">Chinese people are very hardworking.</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. Occupation suffix</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="她是商人。">
+            <div class="sentence-box">
+              <span class="char" data-m="tā (she)">她</span><span class="char" data-m="shì (is)">是</span>
+              <span class="word" data-m="WORD: shāngrén (businessman)"><span class="char" data-m="shāng (commerce)">商</span><span class="char" data-m="rén (person)">人</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">shì</span> <span class="py">shāngrén.</span></div>
+          <div class="translation-line">She is a businessperson.</div>
+        </div>
+      `
+    },
+
+    {
+      id: 'da',
+      hanzi: '大',
+      pinyin: 'dà',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">大</div>
+          <div class="subhead">dà • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+        <div class="meaning-item">
+          <span class="label">1. Big / Large</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="这个房间很大。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: zhège (this)"><span class="char" data-m="zhè (this)">这</span><span class="char" data-m="ge (measure)">个</span></span>
+              <span class="word" data-m="WORD: fángjiān (room)"><span class="char" data-m="fáng (house)">房</span><span class="char" data-m="jiān (space)">间</span></span>
+              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="dà (big)">大</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhège</span> <span class="py">fángjiān</span> <span class="py">hěn</span> <span class="py">dà.</span></div>
+          <div class="translation-line">This room is very big.</div>
+        </div>
+        <div class="meaning-item">
+          <span class="label">2. Older / Major</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我有一个大哥。">
+            <div class="sentence-box">
+              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="yǒu (have)">有</span>
+              <span class="word" data-m="PHRASE: yīge (one)"><span class="char" data-m="yī (one)">一</span><span class="char" data-m="ge (measure)">个</span></span>
+              <span class="word" data-m="WORD: dàgē (older brother)"><span class="char" data-m="dà (big)">大</span><span class="char" data-m="gē (brother)">哥</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">yǒu</span> <span class="py">yīge</span> <span class="py">dàgē.</span></div>
+          <div class="translation-line">I have an older brother.</div>
+        </div>
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. University (大学)</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="我在大学学习。">
+            <div class="sentence-box">
+              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="zài (at)">在</span>
+              <span class="word" data-m="WORD: dàxué (university)"><span class="char" data-m="dà (big)">大</span><span class="char" data-m="xué (study)">学</span></span>
+              <span class="word" data-m="WORD: xuéxí (study)"><span class="char" data-m="xué (study)">学</span><span class="char" data-m="xí (practice)">习</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">zài</span> <span class="py">dàxué</span> <span class="py">xuéxí.</span></div>
+          <div class="translation-line">I study at university.</div>
+        </div>
+      `
+    },
 
   ]; // ← end of CARDS array
 
@@ -719,11 +1229,32 @@
   // ════════════════════════════════════════════════════════════════
   //  SM-2 SCHEDULER
   // ════════════════════════════════════════════════════════════════
-  const STORE_KEY = 'hanzi_flash_v1';
+  const STORE_KEY   = 'hanzi_flash_v1';
+  const STREAK_KEY  = 'hanzi_flash_streak_v1';
 
-  function loadState()         { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e) { return {}; } }
-  function saveState(s)        { localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
-  function getCS(state, id)    { return state[id] || { interval: 0, ease: 2.5, reps: 0, due: 0 }; }
+  function loadState()      { try { return JSON.parse(localStorage.getItem(STORE_KEY))  || {}; } catch(e) { return {}; } }
+  function saveState(s)     { localStorage.setItem(STORE_KEY,  JSON.stringify(s)); }
+  function loadStreak()     { try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { count: 0, lastDay: null }; } catch(e) { return { count: 0, lastDay: null }; } }
+  function saveStreak(s)    { localStorage.setItem(STREAK_KEY, JSON.stringify(s)); }
+  function getCS(state, id) { return state[id] || { interval: 0, ease: 2.5, reps: 0, due: 0 }; }
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  }
+
+  function updateStreak(completed) {
+    const s = loadStreak();
+    const today = todayStr();
+    if (s.lastDay === today) return s;
+    const yesterday = (() => { const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; })();
+    if (completed) {
+      s.count = (s.lastDay === yesterday) ? s.count + 1 : 1;
+      s.lastDay = today;
+    }
+    saveStreak(s);
+    return s;
+  }
 
   function sm2(cs, rating) {
     let { interval, ease, reps } = cs;
@@ -762,45 +1293,112 @@
   let qIdx     = 0;
   let curCard  = null;
 
+  // Session tracking
+  let sessTotal  = 0;
+  let sessGood   = 0; // rating >= 2
+
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    // Scroll to top on each screen change
+    window.scrollTo(0, 0);
   }
 
   // ── HOME ──
   function renderHome() {
     appState = loadState();
-    document.getElementById('stat-due').textContent     = getDue(appState).length;
+    const due = getDue(appState).length;
+    document.getElementById('stat-due').textContent     = due;
     document.getElementById('stat-total').textContent   = CARDS.length;
     document.getElementById('stat-learned').textContent = CARDS.filter(c => getCS(appState, c.id).reps > 0).length;
+
+    // Streak
+    const streak = loadStreak();
+    document.getElementById('streak-num').textContent = streak.count;
+    document.getElementById('streak-banner').style.opacity = streak.count > 0 ? '1' : '0.4';
+
+    // Disable start if nothing due
+    const startBtn = document.getElementById('btn-start');
+    startBtn.disabled = due === 0;
+    startBtn.textContent = due > 0 ? `Start Review (${due} cards) →` : 'All Caught Up ✓';
+
     showScreen('screen-home');
   }
 
   document.getElementById('btn-start').addEventListener('click', () => {
     appState = loadState();
     queue = getDue(appState);
-    if (!queue.length) { showScreen('screen-done'); return; }
+    if (!queue.length) { showDone(); return; }
+    // shuffle queue
+    for (let i = queue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [queue[i], queue[j]] = [queue[j], queue[i]];
+    }
     qIdx = 0;
+    sessTotal = 0;
+    sessGood  = 0;
     showFront();
   });
 
   document.getElementById('btn-home').addEventListener('click', renderHome);
+
+  // ── BROWSE ──
+  document.getElementById('btn-browse').addEventListener('click', () => {
+    appState = loadState();
+    const grid = document.getElementById('browse-grid');
+    grid.innerHTML = '';
+    CARDS.forEach(c => {
+      const cs = getCS(appState, c.id);
+      const isNew    = cs.reps === 0;
+      const isDue    = !isNew && cs.due <= Date.now();
+      const badgeClass = isNew ? 'badge-new' : isDue ? 'badge-due' : 'badge-learned';
+      const div = document.createElement('div');
+      div.className = 'browse-card';
+      div.innerHTML = `
+        <div class="bc-hanzi">${c.hanzi}</div>
+        <div class="bc-pinyin">${c.pinyin}</div>
+        <div class="bc-badge ${badgeClass}"></div>
+      `;
+      grid.appendChild(div);
+    });
+    showScreen('screen-browse');
+  });
+
+  document.getElementById('btn-browse-back').addEventListener('click', renderHome);
 
   // ── FRONT ──
   function updateProgress() {
     const pct = queue.length ? (qIdx / queue.length) * 100 : 0;
     document.getElementById('progress-fill').style.width      = pct + '%';
     document.getElementById('progress-fill-back').style.width = pct + '%';
+    const label = `${qIdx + 1} / ${queue.length}`;
+    document.getElementById('card-counter').textContent      = label;
+    document.getElementById('card-counter-back').textContent = label;
   }
 
   function showFront() {
     curCard = queue[qIdx];
     document.getElementById('front-hanzi').textContent  = curCard.hanzi;
-    document.getElementById('front-pinyin').textContent = curCard.pinyin;
+    const pinyinEl = document.getElementById('front-pinyin');
+    pinyinEl.textContent = curCard.pinyin;
+    pinyinEl.classList.add('hidden');
+    document.getElementById('btn-pinyin-hint').textContent = 'Show Pinyin';
     updateProgress();
     doClearCanvas();
     showScreen('screen-front');
   }
+
+  document.getElementById('btn-pinyin-hint').addEventListener('click', () => {
+    const el = document.getElementById('front-pinyin');
+    const btn = document.getElementById('btn-pinyin-hint');
+    if (el.classList.contains('hidden')) {
+      el.classList.remove('hidden');
+      btn.textContent = 'Hide Pinyin';
+    } else {
+      el.classList.add('hidden');
+      btn.textContent = 'Show Pinyin';
+    }
+  });
 
   document.getElementById('btn-show-answer').addEventListener('click', showBack);
 
@@ -821,9 +1419,63 @@
       const rating = parseInt(btn.dataset.rating);
       appState[curCard.id] = sm2(getCS(appState, curCard.id), rating);
       saveState(appState);
+      sessTotal++;
+      if (rating >= 2) sessGood++;
       qIdx++;
-      qIdx >= queue.length ? showScreen('screen-done') : showFront();
+      qIdx >= queue.length ? showDone() : showFront();
     });
+  });
+
+  // ── DONE ──
+  function showDone() {
+    const pct = sessTotal > 0 ? Math.round((sessGood / sessTotal) * 100) : 0;
+    document.getElementById('sess-total').textContent = sessTotal;
+    document.getElementById('sess-good').textContent  = sessGood;
+    document.getElementById('sess-pct').textContent   = pct + '%';
+
+    if (sessTotal === 0) {
+      document.getElementById('done-emoji').textContent = '✅';
+      document.getElementById('done-title').textContent = 'All Caught Up!';
+      document.getElementById('done-sub').textContent   = 'No cards due right now. Come back tomorrow!';
+    } else {
+      const emoji = pct >= 90 ? '🌟' : pct >= 70 ? '🎉' : pct >= 50 ? '💪' : '📚';
+      document.getElementById('done-emoji').textContent = emoji;
+      document.getElementById('done-title').textContent = 'Session Complete!';
+      document.getElementById('done-sub').textContent   = pct >= 70
+        ? 'Great work! Keep up the streak.'
+        : 'Keep practicing — you\'ll get there!';
+      updateStreak(true);
+    }
+    showScreen('screen-done');
+  }
+
+  // ── KEYBOARD SHORTCUTS ──
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const active = document.querySelector('.screen.active')?.id;
+
+    if (active === 'screen-front') {
+      if (e.code === 'Space') { e.preventDefault(); showBack(); }
+      if (e.key === 'p' || e.key === 'P') {
+        const el = document.getElementById('front-pinyin');
+        const btn = document.getElementById('btn-pinyin-hint');
+        el.classList.toggle('hidden');
+        btn.textContent = el.classList.contains('hidden') ? 'Show Pinyin' : 'Hide Pinyin';
+      }
+    }
+
+    if (active === 'screen-back') {
+      const map = { '1': 0, '2': 1, '3': 2, '4': 3 };
+      if (map[e.key] !== undefined) {
+        const rating = map[e.key];
+        appState[curCard.id] = sm2(getCS(appState, curCard.id), rating);
+        saveState(appState);
+        sessTotal++;
+        if (rating >= 2) sessGood++;
+        qIdx++;
+        qIdx >= queue.length ? showDone() : showFront();
+      }
+    }
   });
 
   // ── TOAST & COPY ──
@@ -1032,6 +1684,7 @@
   }
 
   // ── INIT ──
+  console.log('✅ Page loaded at:', new Date().toLocaleTimeString());
   renderHome();
   </script>
 </body>
