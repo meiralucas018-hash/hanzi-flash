@@ -1,1692 +1,2650 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>汉字 Flash</title>
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0c" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="汉字 Flash" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="Offline-first Chinese flashcards with decks, spaced repetition, pinyin tones, and TTS." />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+
+  <title>HanziCards — Chinese Flashcards</title>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --bg:#0a0a0c;
+      --panel:#141418;
+      --panel2:#19191f;
+      --line:#272733;
+      --text:#f1f5f9;
+      --muted:#97a6ba;
+      --muted2:#7a8aa1;
 
-    html, body {
-      height: 100%;
-      background: #0a0a0c;
-      color: #f1f5f9;
-      font-family: 'Segoe UI', 'PingFang SC', system-ui, -apple-system, sans-serif;
-      overflow-x: hidden;
+      --blue:#60a5fa;
+      --purple:#c084fc;
+      --green:#34d399;
+      --yellow:#fbbf24;
+      --red:#fb7185;
+
+      --tone1:#60a5fa;
+      --tone2:#34d399;
+      --tone3:#fbbf24;
+      --tone4:#fb7185;
+      --tone5:#a8b3c6;
+
+      --shadow: 0 28px 60px -22px rgba(0,0,0,.85);
+      --r1:22px;
+      --r2:14px;
+      --max: 1040px;
     }
 
-    /* ── SCREENS ── */
-    .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; }
-    .screen.active { display: flex; }
-
-    .wrapper {
-      min-height: 100vh;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: clamp(18px, 4vw, 40px) 16px clamp(32px, 6vw, 60px);
-      background-attachment: fixed;
-      background-image:
-        radial-gradient(1200px 700px at 30% 10%, rgba(96,165,250,.10), transparent 60%),
-        radial-gradient(900px 600px at 80% 20%, rgba(192,132,252,.08), transparent 55%),
-        linear-gradient(#0a0a0c, #0a0a0c);
-    }
-
-    .card-box {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 30%), #16161a;
-      max-width: 760px;
-      width: 100%;
-      border-radius: 22px;
-      padding: clamp(20px, 4.2vw, 42px);
-      box-shadow: 0 25px 55px -14px rgba(0,0,0,.75);
-      border: 1px solid rgba(255,255,255,.06);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-box::before {
-      content: "";
-      position: absolute;
-      inset: -2px;
-      border-radius: 24px;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
       background:
-        radial-gradient(450px 220px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
-        radial-gradient(420px 240px at 85% 10%, rgba(192,132,252,.14), transparent 60%);
-      pointer-events: none;
-      opacity: .55;
-      filter: blur(10px);
+        radial-gradient(1200px 700px at 20% 15%, rgba(96,165,250,.11), transparent 60%),
+        radial-gradient(900px 600px at 85% 30%, rgba(192,132,252,.09), transparent 60%),
+        radial-gradient(900px 600px at 35% 95%, rgba(52,211,153,.06), transparent 55%),
+        var(--bg);
+      background-attachment: fixed;
     }
 
-    .card-box > * { position: relative; }
+    a{color:inherit}
+    button, input, select, textarea{font:inherit}
+    button{cursor:pointer}
 
-    /* ── HOME ── */
-    .home-title {
-      font-size: clamp(3rem, 10vw, 5.5rem);
-      font-weight: 900;
-      color: rgba(96,165,250,.92);
-      text-align: center;
-      margin-bottom: 4px;
-      text-shadow: 0 0 24px rgba(96,165,250,.3), 0 18px 45px rgba(0,0,0,.55);
-      letter-spacing: -1px;
+    .app{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
     }
 
-    .home-subtitle {
-      color: #94a3b8;
-      text-align: center;
-      font-size: 0.95em;
-      margin-bottom: 36px;
-      letter-spacing: .5px;
+    header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(10,10,12,.92), rgba(10,10,12,.65));
+      border-bottom:1px solid rgba(39,39,51,.65);
     }
 
-    .streak-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: rgba(251,191,36,.07);
-      border: 1px solid rgba(251,191,36,.2);
+    .header-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      justify-content:space-between;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 220px;
+    }
+
+    .logo{
+      width:38px;
+      height:38px;
       border-radius: 12px;
-      padding: 10px 18px;
-      margin-bottom: 20px;
-      font-size: .9em;
-      color: #fbbf24;
-      font-weight: 600;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 18px 44px -24px rgba(0,0,0,.9);
+      background: rgba(255,255,255,.04);
+      display:grid;
+      place-items:center;
+      flex: 0 0 auto;
+    }
+    .logo svg{width:32px;height:32px;opacity:.95}
+
+    .brand h1{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .brand .sub{
+      margin-top:2px;
+      font-size:12px;
+      color:var(--muted);
     }
 
-    .streak-banner .streak-num {
-      font-size: 1.5em;
-      font-weight: 900;
-      line-height: 1;
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
     }
 
-    .stats-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.09);
+      padding: 8px 10px;
+      border-radius: 999px;
     }
 
-    .stat-pill {
+    .chip label{font-size:12px;color:var(--muted)}
+    .chip select{
+      background: transparent;
+      border:none;
+      color:var(--text);
+      outline:none;
+      font-weight:650;
+      max-width: 240px;
+    }
+    .chip select option{background:#0f0f14}
+
+    .btn{
+      border:none;
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      padding: 10px 12px;
+      border-radius: 12px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{background: rgba(255,255,255,.08)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(96,165,250,.22), rgba(192,132,252,.18));
+      border-color: rgba(96,165,250,.25);
+    }
+    .btn.danger{
+      background: rgba(251,113,133,.10);
+      border-color: rgba(251,113,133,.25);
+    }
+    .btn.good{
+      background: rgba(52,211,153,.10);
+      border-color: rgba(52,211,153,.25);
+    }
+    .btn.warn{
+      background: rgba(251,191,36,.10);
+      border-color: rgba(251,191,36,.25);
+    }
+    .btn.small{padding: 8px 10px;border-radius: 10px;font-size:13px}
+    .btn.icon{padding: 10px 10px}
+    .btn[disabled]{opacity:.55;cursor:not-allowed}
+
+    nav{
+      max-width:var(--max);
+      margin:0 auto;
+      padding: 0 16px 14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      text-decoration:none;
+      font-size:13px;
+      color:var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.03);
+    }
+    .tab.active{
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.10);
+    }
+
+    main{
+      flex:1;
+      max-width:var(--max);
+      width:100%;
+      margin:0 auto;
+      padding: 18px 16px 64px;
+    }
+
+    .grid{
+      display:grid;
+      gap:16px;
+    }
+    @media(min-width: 900px){
+      .grid.cols2{grid-template-columns: 1.2fr .8fr;}
+      .grid.cols3{grid-template-columns: 1fr 1fr 1fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--r1);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 14px 10px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .card .hd h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .card .hd .meta{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .card .bd{
+      padding: 14px;
+    }
+
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row.between{justify-content:space-between}
+    .muted{color:var(--muted)}
+    .muted2{color:var(--muted2)}
+    .kpi{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .kpi .pill{
       background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.08);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .pill b{color:var(--text);font-weight:700}
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .item{
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .item .left{min-width:0}
+    .item .title{
+      margin:0;
+      font-size:14px;
+      font-weight:750;
+      letter-spacing:.15px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .badge{
+      font-size:11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      background: rgba(255,255,255,.03);
+    }
+    .item .desc{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+      word-break: break-word;
+    }
+    .item .right{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+    .form{
+      display:grid;
+      gap:10px;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .field input, .field textarea{
+      width:100%;
+      padding: 12px 12px;
       border-radius: 14px;
-      padding: 14px 20px;
-      text-align: center;
-      min-width: 90px;
-      flex: 1;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,10,12,.35);
+      color:var(--text);
+      outline:none;
+    }
+    .field textarea{min-height: 92px; resize: vertical;}
+    .hint{font-size:12px;color:var(--muted2);line-height:1.35}
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.08);
+      margin: 10px 0;
     }
 
-    .stat-num {
-      font-size: 2rem;
-      font-weight: 800;
-      color: rgba(96,165,250,.9);
-      line-height: 1;
+    .flash{
+      display:grid;
+      gap:14px;
     }
 
-    .stat-label {
-      font-size: 0.7em;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      margin-top: 4px;
-    }
-
-    .home-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* ── BUTTONS ── */
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 15px 24px;
-      border-radius: 14px;
-      border: none;
-      font-family: inherit;
-      font-size: 1em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .18s ease;
-      letter-spacing: .3px;
-    }
-
-    .btn-primary {
-      background: rgba(96,165,250,.15);
-      border: 1px solid rgba(96,165,250,.35);
-      color: #60a5fa;
-    }
-    .btn-primary:hover { background: rgba(96,165,250,.25); transform: translateY(-1px); }
-    .btn-primary:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,.04);
+    .flashcard{
+      border-radius: var(--r1);
+      overflow:hidden;
       border: 1px solid rgba(255,255,255,.10);
-      color: #94a3b8;
+      background:
+        radial-gradient(900px 540px at 20% 10%, rgba(96,165,250,.08), transparent 60%),
+        radial-gradient(900px 540px at 85% 35%, rgba(192,132,252,.07), transparent 60%),
+        rgba(255,255,255,.03);
+      box-shadow: var(--shadow);
     }
-    .btn-secondary:hover { background: rgba(255,255,255,.08); transform: translateY(-1px); }
-
-    .btn-show {
-      background: rgba(192,132,252,.12);
-      border: 1px solid rgba(192,132,252,.3);
-      color: #c084fc;
-      margin-top: 20px;
+    .flashcard .topbar{
+      padding: 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
     }
-    .btn-show:hover { background: rgba(192,132,252,.22); transform: translateY(-1px); }
-
-    .btn-hint {
-      display: block;
-      width: 100%;
-      padding: 9px 16px;
-      border-radius: 10px;
-      border: 1px dashed rgba(96,165,250,.22);
-      background: transparent;
-      color: rgba(96,165,250,.5);
-      font-family: inherit;
-      font-size: .82em;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: all .18s;
-      letter-spacing: .3px;
-    }
-    .btn-hint:hover { border-color: rgba(96,165,250,.5); color: rgba(96,165,250,.85); }
-
-    /* ── KEYBOARD HINT ── */
-    .kbd-hint {
-      text-align: center;
-      color: #334155;
-      font-size: .73em;
-      margin-top: 14px;
-      letter-spacing: .4px;
-    }
-    .kbd {
-      display: inline-block;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 5px;
-      padding: 1px 6px;
-      font-family: monospace;
-      font-size: 1em;
+    .flashcard .content{
+      padding: 18px 16px 16px;
+      display:grid;
+      gap:14px;
+      min-height: 240px;
+      align-content:center;
+      text-align:center;
     }
 
-    /* ── PROGRESS ── */
-    .progress-bar-wrap {
-      width: 100%;
-      max-width: 760px;
-      height: 3px;
-      background: rgba(255,255,255,.05);
-      border-radius: 99px;
-      margin-bottom: 18px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #60a5fa, #c084fc);
-      border-radius: 99px;
-      transition: width .4s ease;
-    }
-
-    /* ── FRONT ── */
-    .char-display {
-      text-align: center;
-      margin-bottom: 22px;
-    }
-
-    .hanzi {
-      font-size: clamp(3.1rem, 7.5vw, 4.6rem);
+    .hanzi{
+      font-size: clamp(44px, 7vw, 86px);
       font-weight: 900;
-      color: rgba(96,165,250,.92);
-      text-shadow: 0 0 18px rgba(96,165,250,.22), 0 18px 45px rgba(0,0,0,.55);
+      letter-spacing: 2px;
       line-height: 1.05;
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap: 6px;
+      padding: 6px 0;
+      user-select:none;
+    }
+    .hanzi .hz{
+      border-radius: 14px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      transition: transform .08s ease, background .12s ease, border-color .12s ease;
+    }
+    .hanzi .hz:hover{
+      border-color: rgba(96,165,250,.25);
+      background: rgba(96,165,250,.06);
+    }
+    .hanzi .hz:active{transform: translateY(1px)}
+    .hanzi .hz.main{
+      border-color: rgba(192,132,252,.28);
+      background: rgba(192,132,252,.08);
+      box-shadow: 0 14px 40px -30px rgba(192,132,252,.65);
     }
 
-    .pinyin {
-      margin-top: 6px;
-      color: #94a3b8;
-      font-size: 1.05rem;
-      letter-spacing: .4px;
-      min-height: 1.6em;
-      transition: opacity .25s ease;
+    .pinyin{
+      font-size: clamp(16px, 2.7vw, 22px);
+      color: var(--muted);
+      letter-spacing: .2px;
+      display:flex;
+      gap: 10px;
+      justify-content:center;
+      flex-wrap:wrap;
+      user-select:none;
     }
-    .pinyin.hidden { opacity: 0; }
-
-    .card-counter {
-      position: absolute;
-      top: 18px;
-      right: 22px;
-      font-size: .72em;
-      color: #475569;
-      font-weight: 600;
-      letter-spacing: .4px;
+    .syll{
+      padding: 4px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
     }
+    .tone1{color:var(--tone1)}
+    .tone2{color:var(--tone2)}
+    .tone3{color:var(--tone3)}
+    .tone4{color:var(--tone4)}
+    .tone5{color:var(--tone5)}
 
-    .canvas-wrapper {
-      position: relative;
-      width: min(420px, 92vw);
-      height: min(420px, 92vw);
+    .meaning{
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text);
+      max-width: 70ch;
       margin: 0 auto;
+      white-space: pre-wrap;
+    }
+    .example{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 80ch;
+      margin: 0 auto;
+      white-space: pre-wrap;
     }
 
-    .canvas-grid {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.10) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px);
-      background-size: 50% 50%;
-      border-radius: 14px;
-      border: 1px dashed rgba(255,255,255,0.15);
-      box-sizing: border-box;
-    }
-
-    .canvas-grid::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(135deg, transparent 49%, rgba(255,255,255,0.05) 50%, transparent 51%),
-        linear-gradient(45deg,  transparent 49%, rgba(255,255,255,0.05) 50%, transparent 51%);
-      border-radius: 14px;
-    }
-
-    #drawingCanvas {
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.25);
-      border-radius: 14px;
-      box-shadow: inset 0 3px 15px rgba(0,0,0,0.6);
-      cursor: crosshair;
-      touch-action: none;
-      display: block;
-    }
-
-    .btn-row {
-      margin-top: 12px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .draw-btn {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.10);
-      color: #f1f5f9;
-      padding: 8px 18px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: .9em;
-      transition: all .2s ease;
-    }
-
-    .draw-btn:hover {
-      background: rgba(96,165,250,0.15);
-      border-color: rgba(96,165,250,0.4);
-    }
-
-    /* ── RATING ── */
-    .rating-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 20px;
-    }
-
-    .rating-btn {
-      padding: 13px 6px;
-      border-radius: 12px;
-      border: 1px solid;
-      font-family: inherit;
-      font-size: 0.85em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .18s ease;
-      text-align: center;
-      line-height: 1.3;
-    }
-
-    .rating-btn .ivl {
-      display: block;
-      font-size: 0.72em;
-      font-weight: 400;
-      opacity: 0.65;
-      margin-top: 2px;
-    }
-
-    .btn-again { background: rgba(239,68,68,.10);  border-color: rgba(239,68,68,.3);  color: #f87171; }
-    .btn-hard  { background: rgba(251,146,60,.10); border-color: rgba(251,146,60,.3); color: #fb923c; }
-    .btn-good  { background: rgba(96,165,250,.10); border-color: rgba(96,165,250,.3); color: #60a5fa; }
-    .btn-easy  { background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.3); color: #34d399; }
-
-    .btn-again:hover { background: rgba(239,68,68,.2);  transform: translateY(-1px); }
-    .btn-hard:hover  { background: rgba(251,146,60,.2); transform: translateY(-1px); }
-    .btn-good:hover  { background: rgba(96,165,250,.2); transform: translateY(-1px); }
-    .btn-easy:hover  { background: rgba(52,211,153,.2); transform: translateY(-1px); }
-
-    /* ── MEANING MAP ── */
-    .meaning-map .mm-header { text-align: center; margin-bottom: clamp(16px,3vw,24px); }
-
-    .meaning-map .char-main {
-      font-size: clamp(3.2rem, 8vw, 4.8rem);
-      font-weight: 900;
-      color: rgba(96,165,250,.88);
-      text-shadow: 0 0 18px rgba(96,165,250,.22), 0 18px 45px rgba(0,0,0,.55);
-      cursor: pointer;
-      display: inline-block;
-      transition: transform .2s, color .2s;
-    }
-    .meaning-map .char-main:hover { transform: scale(1.05); color: #fff; }
-
-    .meaning-map .subhead { color: #94a3b8; font-size: 0.9em; margin-top: 6px; letter-spacing: .4px; }
-
-    .meaning-map .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
-      margin: 0 0 clamp(18px,3vw,28px) 0;
-    }
-
-    .meaning-map .meaning-item {
-      position: relative;
-      margin-bottom: clamp(20px,3.5vw,36px);
-      padding: 0 0 0 18px;
-      border-left: 3px solid rgba(255,255,255,.07);
-    }
-
-    .meaning-map .label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.78em;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 1.6px;
-      color: #c084fc;
-      margin: 0 0 12px 0;
-    }
-
-    .meaning-map .label::before {
-      content: "";
-      width: 10px; height: 10px;
-      border-radius: 99px;
-      background: rgba(192,132,252,.8);
-      box-shadow: 0 0 0 4px rgba(192,132,252,.15);
-      flex-shrink: 0;
-    }
-
-    .meaning-map .sentence-wrap {
-      background: rgba(255,255,255,.02);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 14px;
+    .flashcard .actions{
       padding: 14px;
-      cursor: pointer;
-      transition: border-color .18s, transform .18s, background .18s;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
     }
 
-    .meaning-map .sentence-wrap:hover {
-      border-color: rgba(96,165,250,.35);
-      background: rgba(255,255,255,.025);
-      transform: translateY(-1px);
+    .rating{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
     }
 
-    .meaning-map .sentence-box {
-      font-size: clamp(1.4rem, 3.5vw, 2rem);
-      line-height: 1.8;
-      color: #f1f5f9;
-      word-break: keep-all;
-      overflow-wrap: anywhere;
+    .kbd{
+      font-size: 11px;
+      color: var(--muted2);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding: 2px 6px;
+      border-radius: 8px;
+      margin-left: 6px;
     }
 
-    .meaning-map .word {
-      position: relative;
-      display: inline-block;
-      border-bottom: 5px dashed #3f444d;
-      margin-bottom: 8px;
-      padding: 0 3px 5px 3px;
-      cursor: pointer;
-      transition: border-color .2s;
+    dialog{
+      border:none;
+      padding:0;
+      border-radius: 18px;
+      width:min(720px, calc(100% - 24px));
+      color:var(--text);
+      background:
+        radial-gradient(900px 540px at 20% 10%, rgba(96,165,250,.10), transparent 60%),
+        radial-gradient(900px 540px at 85% 35%, rgba(192,132,252,.08), transparent 60%),
+        rgba(15,15,20,.98);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 40px 90px -40px rgba(0,0,0,.90);
     }
-    .meaning-map .word:hover { border-bottom-color: #c084fc; }
-
-    .meaning-map .char {
-      position: relative;
-      display: inline;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: color .1s, background .12s;
+    dialog::backdrop{
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
     }
-    .meaning-map .char:hover { color: #60a5fa; background: rgba(96,165,250,.14); }
-
-    .meaning-map .char::after,
-    .meaning-map .word::after {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%) translateY(-10px);
-      padding: 7px 12px;
-      border-radius: 10px;
-      font-size: 0.46em;
-      font-weight: 650;
-      white-space: nowrap;
-      visibility: hidden;
-      opacity: 0;
-      z-index: 99999;
-      pointer-events: none;
-      transition: opacity .12s, transform .12s;
-      max-width: min(78vw, 520px);
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .dlg-hd{
+      padding: 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .dlg-hd h3{margin:0;font-size:14px}
+    .dlg-bd{padding: 14px}
+    .dlg-ft{
+      padding: 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
     }
 
-    .meaning-map .char::after {
-      content: attr(data-m);
-      bottom: 100%;
-      margin-bottom: 18px;
-      background: #2d2d35;
-      color: #60a5fa;
-      border: 1px solid rgba(96,165,250,.75);
-      box-shadow: 0 10px 24px rgba(0,0,0,.35);
-    }
-
-    .meaning-map .word::after {
-      content: attr(data-m);
-      bottom: 100%;
-      margin-bottom: 18px;
-      background: rgba(192,132,252,.95);
-      color: #000;
-      border: 1px solid rgba(192,132,252,.35);
-      box-shadow: 0 12px 24px rgba(0,0,0,.28);
-    }
-
-    .meaning-map .char:hover::after,
-    .meaning-map .word:hover::after {
-      visibility: visible;
-      opacity: 1;
-      transform: translateX(-50%) translateY(-16px);
-    }
-
-    .meaning-map .word.suppress-word-tooltip::after {
-      visibility: hidden !important;
-      opacity: 0 !important;
-    }
-
-    .meaning-map .pinyin-line {
-      color: rgba(96,165,250,.95);
-      font-size: 1em;
-      margin-top: 10px;
-      line-height: 1.55;
-    }
-
-    .meaning-map .py { display: inline-block; white-space: nowrap; }
-
-    .meaning-map .translation-line {
-      color: #94a3b8;
-      font-style: italic;
-      font-size: 0.95em;
-      margin-top: 2px;
-    }
-
-    /* ── TOAST ── */
-    .toast {
+    .toast-wrap{
       position: fixed;
       left: 50%;
+      transform: translateX(-50%);
       bottom: 18px;
-      transform: translateX(-50%) translateY(18px);
-      background: rgba(22,22,26,.92);
-      border: 1px solid rgba(255,255,255,.10);
-      color: #f1f5f9;
-      padding: 10px 18px;
-      border-radius: 999px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.45);
-      font-size: .95em;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s, transform .18s;
-      z-index: 9999;
-      white-space: nowrap;
+      z-index: 100;
+      display:grid;
+      gap:10px;
+      width:min(640px, calc(100% - 24px));
+      pointer-events:none;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    /* ── DONE SCREEN ── */
-    .done-emoji { font-size: 4rem; text-align: center; margin-bottom: 16px; }
-    .done-title { font-size: 1.8rem; font-weight: 800; color: rgba(96,165,250,.9); text-align: center; margin-bottom: 8px; }
-    .done-sub   { color: #94a3b8; text-align: center; font-size: 0.95em; margin-bottom: 28px; line-height: 1.6; }
-
-    .session-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 28px;
+    .toast{
+      pointer-events:auto;
+      background: rgba(20,20,26,.92);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      box-shadow: 0 28px 70px -40px rgba(0,0,0,.95);
     }
+    .toast .msg{font-size:13px;color:var(--text);line-height:1.35}
+    .toast .msg .small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .toast .act{display:flex;gap:8px;flex-wrap:wrap}
 
-    .session-stat {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.07);
-      border-radius: 12px;
-      padding: 12px 8px;
-      text-align: center;
+    .practice{
+      display:grid;
+      gap:12px;
     }
-
-    .session-stat .s-num {
-      font-size: 1.6rem;
-      font-weight: 800;
-      line-height: 1;
+    .canvas-wrap{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      border-radius: 18px;
+      overflow:hidden;
+      position:relative;
+      box-shadow: 0 26px 60px -42px rgba(0,0,0,.9);
     }
-
-    .session-stat .s-label {
-      font-size: .65em;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 1.1px;
-      margin-top: 4px;
+    canvas{
+      width:100%;
+      height: 320px;
+      display:block;
+      touch-action: none;
+      background:
+        linear-gradient(transparent 0, transparent 49%, rgba(255,255,255,.06) 50%, transparent 51%, transparent 100%),
+        linear-gradient(90deg, transparent 0, transparent 49%, rgba(255,255,255,.06) 50%, transparent 51%, transparent 100%);
+      background-size: 42px 42px;
+      background-color: rgba(10,10,12,.10);
     }
-
-    .s-green { color: #34d399; }
-    .s-blue  { color: #60a5fa; }
-    .s-amber { color: #fbbf24; }
-
-    /* ── BROWSE ── */
-    .browse-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-
-    .browse-back {
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 10px;
-      color: #94a3b8;
-      padding: 7px 14px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: .9em;
-      transition: all .2s;
-    }
-    .browse-back:hover { background: rgba(255,255,255,.1); color: #f1f5f9; }
-
-    .browse-title {
-      font-size: 1.1em;
-      font-weight: 700;
-      color: #f1f5f9;
-    }
-
-    .browse-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 10px;
-    }
-
-    .browse-card {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 16px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .18s ease;
-    }
-
-    .browse-card:hover {
-      background: rgba(96,165,250,.1);
-      border-color: rgba(96,165,250,.3);
-      transform: translateY(-2px);
-    }
-
-    .browse-card .bc-hanzi {
-      font-size: 2rem;
+    .canvas-overlay{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      opacity:.16;
+      font-size: 160px;
       font-weight: 900;
-      color: rgba(96,165,250,.88);
-      line-height: 1;
+      letter-spacing: 4px;
+      user-select:none;
     }
 
-    .browse-card .bc-pinyin {
-      font-size: .7em;
-      color: #64748b;
-      margin-top: 5px;
-    }
-
-    .browse-card .bc-badge {
-      width: 8px; height: 8px;
-      border-radius: 99px;
-      margin: 6px auto 0;
-    }
-
-    .badge-new    { background: #60a5fa; }
-    .badge-due    { background: #fb923c; }
-    .badge-learned{ background: #34d399; }
-
-    @media (max-width: 420px) {
-      .rating-btn { font-size: 0.78em; padding: 11px 4px; }
-      .meaning-map .char::after, .meaning-map .word::after { max-width: min(88vw,420px); font-size: .50em; }
-      .session-stats { grid-template-columns: repeat(3,1fr); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; }
+    .sr-only{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
     }
   </style>
 </head>
+
 <body>
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true" title="HanziCards">
+            <svg viewBox="0 0 64 64" fill="none">
+              <defs>
+                <linearGradient id="g" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#60a5fa" stop-opacity="0.95"/>
+                  <stop offset="1" stop-color="#c084fc" stop-opacity="0.95"/>
+                </linearGradient>
+              </defs>
+              <rect x="10" y="10" width="44" height="44" rx="14" fill="url(#g)" fill-opacity="0.30" stroke="rgba(255,255,255,.18)"/>
+              <path d="M22 24h20M24 20v24m16-24v24M22 40h20" stroke="rgba(241,245,249,.95)" stroke-width="3.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>HanziCards</h1>
+            <div class="sub">Offline Chinese flashcards · decks · SRS · TTS</div>
+          </div>
+        </div>
 
-  <!-- ══════════════ HOME ══════════════ -->
-  <div id="screen-home" class="screen active">
-    <div class="wrapper">
-      <div class="card-box" style="max-width:480px;">
-        <div class="home-title">汉字</div>
-        <div class="home-subtitle">Spaced Repetition Flashcards</div>
-        <div class="streak-banner" id="streak-banner">
-          <span>🔥</span>
-          <span class="streak-num" id="streak-num">0</span>
-          <span>day streak</span>
+        <div class="header-actions">
+          <div class="chip" title="Select deck">
+            <label for="deckSelect">Deck</label>
+            <select id="deckSelect" aria-label="Select deck"></select>
+          </div>
+
+          <button class="btn small" id="installBtn" style="display:none" title="Install (PWA)">
+            ⬇️ Install
+          </button>
+
+          <button class="btn small" id="syncHintBtn" title="App status">
+            ✅ Offline-ready
+          </button>
         </div>
-        <div class="stats-row">
-          <div class="stat-pill">
-            <div class="stat-num" id="stat-due">0</div>
-            <div class="stat-label">Due Today</div>
-          </div>
-          <div class="stat-pill">
-            <div class="stat-num" id="stat-total">0</div>
-            <div class="stat-label">Total</div>
-          </div>
-          <div class="stat-pill">
-            <div class="stat-num" id="stat-learned">0</div>
-            <div class="stat-label">Learned</div>
-          </div>
-        </div>
-        <div class="home-actions">
-          <button class="btn btn-primary" id="btn-start">Start Review →</button>
-          <button class="btn btn-secondary" id="btn-browse">Browse All Cards</button>
+      </div>
+
+      <nav aria-label="Primary navigation">
+        <a class="tab" href="#decks" id="tabDecks">Decks</a>
+        <a class="tab" href="#study" id="tabStudy">Study</a>
+        <a class="tab" href="#add" id="tabAdd">Add</a>
+        <a class="tab" href="#search" id="tabSearch">Search</a>
+        <a class="tab" href="#settings" id="tabSettings">Settings</a>
+      </nav>
+    </header>
+
+    <main id="view" aria-live="polite"></main>
+  </div>
+
+  <div class="toast-wrap" id="toasts" aria-live="polite" aria-relevant="additions"></div>
+
+  <!-- Deck modal -->
+  <dialog id="deckDlg">
+    <div class="dlg-hd">
+      <h3 id="deckDlgTitle">Deck</h3>
+      <button class="btn icon small" id="deckDlgClose" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="dlg-bd">
+      <div class="form">
+        <div class="field">
+          <label for="deckName">Deck name</label>
+          <input id="deckName" placeholder="e.g., HSK 1 — Lesson 3" />
+          <div class="hint">Tip: Keep decks focused (HSK level, lesson, topic).</div>
         </div>
       </div>
     </div>
-  </div>
+    <div class="dlg-ft">
+      <button class="btn" id="deckDlgCancel">Cancel</button>
+      <button class="btn primary" id="deckDlgSave">Save</button>
+    </div>
+  </dialog>
 
-  <!-- ══════════════ FRONT ══════════════ -->
-  <div id="screen-front" class="screen">
-    <div class="wrapper">
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+  <!-- Bulk add modal -->
+  <dialog id="bulkDlg">
+    <div class="dlg-hd">
+      <h3>Bulk Add</h3>
+      <button class="btn icon small" id="bulkDlgClose" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="dlg-bd">
+      <div class="hint">
+        Paste lines in one of these formats:<br>
+        <b>hanzi[TAB]pinyin[TAB]meaning</b><br>
+        or <b>hanzi | pinyin | meaning</b><br>
+        Example: 你好[TAB]ni3 hao3[TAB]hello
       </div>
-      <div class="card-box">
-        <div class="card-counter" id="card-counter"></div>
-        <div class="char-display">
-          <div class="hanzi" id="front-hanzi"></div>
-          <div class="pinyin hidden" id="front-pinyin"></div>
-        </div>
-        <div class="canvas-wrapper">
-          <canvas id="drawingCanvas" width="420" height="420"></canvas>
-          <div class="canvas-grid"></div>
-        </div>
-        <div class="btn-row">
-          <button id="undoDrawBtn" class="draw-btn"
-            style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.25);">Undo</button>
-          <button id="clearDrawBtn" class="draw-btn"
-            style="background:rgba(255,60,60,0.1);border-color:rgba(255,60,60,0.2);">Clear</button>
-        </div>
-        <button class="btn-hint" id="btn-pinyin-hint">Show Pinyin</button>
-        <button class="btn btn-show" id="btn-show-answer">Show Answer <span style="opacity:.5;font-weight:400;font-size:.85em">Space</span></button>
-        <div class="kbd-hint">Rate: <span class="kbd">1</span> Again &nbsp; <span class="kbd">2</span> Hard &nbsp; <span class="kbd">3</span> Good &nbsp; <span class="kbd">4</span> Easy</div>
+      <div class="divider"></div>
+      <div class="field">
+        <label for="bulkText">Paste here</label>
+        <textarea id="bulkText" placeholder="你好	ni3 hao3	hello"></textarea>
+      </div>
+      <div class="row">
+        <span class="muted2">Auto-converts pinyin numbers → tone marks.</span>
       </div>
     </div>
-  </div>
-
-  <!-- ══════════════ BACK ══════════════ -->
-  <div id="screen-back" class="screen">
-    <div class="wrapper">
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" id="progress-fill-back" style="width:0%"></div>
-      </div>
-      <div class="card-box">
-        <div class="card-counter" id="card-counter-back"></div>
-        <div class="meaning-map" id="meaning-map-content"></div>
-        <div class="rating-row">
-          <button class="rating-btn btn-again" data-rating="0">Again<span class="ivl" id="ivl-again"></span></button>
-          <button class="rating-btn btn-hard"  data-rating="1">Hard<span  class="ivl" id="ivl-hard"></span></button>
-          <button class="rating-btn btn-good"  data-rating="2">Good<span  class="ivl" id="ivl-good"></span></button>
-          <button class="rating-btn btn-easy"  data-rating="3">Easy<span  class="ivl" id="ivl-easy"></span></button>
-        </div>
-        <div class="kbd-hint" style="margin-top:12px"><span class="kbd">1</span> Again &nbsp; <span class="kbd">2</span> Hard &nbsp; <span class="kbd">3</span> Good &nbsp; <span class="kbd">4</span> Easy</div>
-      </div>
+    <div class="dlg-ft">
+      <button class="btn" id="bulkCancel">Cancel</button>
+      <button class="btn primary" id="bulkImport">Add cards</button>
     </div>
-  </div>
+  </dialog>
 
-  <!-- ══════════════ DONE ══════════════ -->
-  <div id="screen-done" class="screen">
-    <div class="wrapper">
-      <div class="card-box" style="max-width:480px;">
-        <div class="done-emoji" id="done-emoji">🎉</div>
-        <div class="done-title" id="done-title">Session Complete!</div>
-        <div class="done-sub" id="done-sub">Come back tomorrow for your next review.</div>
-        <div class="session-stats">
-          <div class="session-stat">
-            <div class="s-num s-blue" id="sess-total">0</div>
-            <div class="s-label">Reviewed</div>
-          </div>
-          <div class="session-stat">
-            <div class="s-num s-green" id="sess-good">0</div>
-            <div class="s-label">Correct</div>
-          </div>
-          <div class="session-stat">
-            <div class="s-num s-amber" id="sess-pct">0%</div>
-            <div class="s-label">Accuracy</div>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="btn-home">← Back to Deck</button>
-      </div>
+  <!-- Confirm modal -->
+  <dialog id="confirmDlg">
+    <div class="dlg-hd">
+      <h3 id="confirmTitle">Confirm</h3>
+      <button class="btn icon small" id="confirmClose" aria-label="Close dialog">✕</button>
     </div>
-  </div>
-
-  <!-- ══════════════ BROWSE ══════════════ -->
-  <div id="screen-browse" class="screen">
-    <div class="wrapper">
-      <div class="card-box" style="max-width:600px;">
-        <div class="browse-header">
-          <button class="browse-back" id="btn-browse-back">← Back</button>
-          <div class="browse-title">All Cards</div>
-        </div>
-        <div class="browse-grid" id="browse-grid"></div>
-      </div>
+    <div class="dlg-bd">
+      <div id="confirmMsg" class="muted" style="line-height:1.45"></div>
     </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
+    <div class="dlg-ft">
+      <button class="btn" id="confirmNo">Cancel</button>
+      <button class="btn danger" id="confirmYes">Delete</button>
+    </div>
+  </dialog>
 
   <script>
-  // ════════════════════════════════════════════════════════════════
-  //  CARD DATA
-  //  To add a new card: copy one entry and fill in your data.
-  // ════════════════════════════════════════════════════════════════
-  const CARDS = [
+    /***********************
+     * HanziCards (offline)
+     * - decks + cards in IndexedDB
+     * - SM-2-ish SRS
+     * - pinyin tone mark converter + tone colors
+     * - Mandarin TTS (Web Speech API)
+     * - import/export backup
+     ************************/
 
-    {
-      id: 'dui',
-      hanzi: '对',
-      pinyin: 'duì',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">对</div>
-          <div class="subhead">duì • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. Correct / Right</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="这个答案是对的。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: zhège (this)"><span class="char" data-m="zhè (this)">这</span><span class="char" data-m="ge (item)">个</span></span>
-              <span class="word" data-m="WORD: dá'àn (answer)"><span class="char" data-m="dá (reply)">答</span><span class="char" data-m="àn (record)">案</span></span>
-              <span class="char" data-m="shì (is)">是</span><span class="char" data-m="duì (correct)">对</span><span class="char" data-m="de (particle)">的</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhège</span> <span class="py">dá'àn</span> <span class="py">shì</span> <span class="py">duì</span> <span class="py">de.</span></div>
-          <div class="translation-line">This answer is correct.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Verb: To face / treat / reply</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="他对我笑了笑。">
-            <div class="sentence-box">
-              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="duì (faced)">对</span><span class="char" data-m="wǒ (me)">我</span>
-              <span class="word" data-m="REDUPLICATION: xiàolexiào (smiled)"><span class="char" data-m="xiào (smile)">笑</span><span class="char" data-m="le (past)">了</span><span class="char" data-m="xiào (smile)">笑</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">wǒ</span> <span class="py">xiàole</span> <span class="py">xiào.</span></div>
-          <div class="translation-line">He smiled at me.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">3. Preposition: Regarding / toward</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="他对音乐很感兴趣。">
-            <div class="sentence-box">
-              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="duì (toward)">对</span>
-              <span class="word" data-m="WORD: yīnyuè (music)"><span class="char" data-m="yīn (sound)">音</span><span class="char" data-m="yuè (music)">乐</span></span>
-              <span class="char" data-m="hěn (very)">很</span>
-              <span class="word" data-m="PHRASE: gǎn xìngqù (interested)"><span class="char" data-m="gǎn (feel)">感</span><span class="char" data-m="xìng (nature)">兴</span><span class="char" data-m="qù (interest)">趣</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">yīnyuè</span> <span class="py">hěn</span> <span class="py">gǎn</span> <span class="py">xìngqù.</span></div>
-          <div class="translation-line">He is very interested in music.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">4. Classifier: For Pairs</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="那是一对夫妻。">
-            <div class="sentence-box">
-              <span class="char" data-m="nà (that)">那</span><span class="char" data-m="shì (is)">是</span>
-              <span class="char" data-m="yī (one)">一</span><span class="char" data-m="duì (pair)">对</span>
-              <span class="word" data-m="WORD: fūqī (couple)"><span class="char" data-m="fū (husband)">夫</span><span class="char" data-m="qī (wife)">妻</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nà</span> <span class="py">shì</span> <span class="py">yī</span> <span class="py">duì</span> <span class="py">fūqī.</span></div>
-          <div class="translation-line">That is a pair / couple.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">5. Common Usage</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="对不起，我迟到了。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: duìbuqǐ (sorry)"><span class="char" data-m="duì (face)">对</span><span class="char" data-m="bu (not)">不</span><span class="char" data-m="qǐ (rise)">起</span></span>，
-              <span class="char" data-m="wǒ (I)">我</span>
-              <span class="word" data-m="WORD: chídào (arrive late)"><span class="char" data-m="chí (late)">迟</span><span class="char" data-m="dào (arrive)">到</span></span>
-              <span class="char" data-m="le (past)">了</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Duìbuqǐ,</span> <span class="py">wǒ</span> <span class="py">chídào</span> <span class="py">le.</span></div>
-          <div class="translation-line">Sorry, I am late.</div>
-        </div>
-      `
-    },
+    const $ = (s, el=document) => el.querySelector(s);
+    const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-    {
-      id: 'hao',
-      hanzi: '好',
-      pinyin: 'hǎo',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">好</div>
-          <div class="subhead">hǎo • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. Good / Fine / Well</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="今天天气很好。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: jīntiān (today)"><span class="char" data-m="jīn (now)">今</span><span class="char" data-m="tiān (day)">天</span></span>
-              <span class="word" data-m="WORD: tiānqì (weather)"><span class="char" data-m="tiān (sky)">天</span><span class="char" data-m="qì (air)">气</span></span>
-              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="hǎo (good)">好</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Jīntiān</span> <span class="py">tiānqì</span> <span class="py">hěn</span> <span class="py">hǎo.</span></div>
-          <div class="translation-line">Today's weather is very good.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Greeting: Hello</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="你好！">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: nǐhǎo (hello)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="hǎo (well)">好</span></span>！
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nǐ</span> <span class="py">hǎo!</span></div>
-          <div class="translation-line">Hello! (lit. "You good!")</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. Easy to do (好 + Verb)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="这道题很好做。">
-            <div class="sentence-box">
-              <span class="char" data-m="zhè (this)">这</span>
-              <span class="word" data-m="WORD: dàotí (problem)"><span class="char" data-m="dào (measure word)">道</span><span class="char" data-m="tí (question)">题</span></span>
-              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="hǎo (easy)">好</span><span class="char" data-m="zuò (do)">做</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">dào tí</span> <span class="py">hěn</span> <span class="py">hǎo</span> <span class="py">zuò.</span></div>
-          <div class="translation-line">This problem is easy to do.</div>
-        </div>
-      `
-    },
+    const now = () => Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
 
-    {
-      id: 'wo',
-      hanzi: '我',
-      pinyin: 'wǒ',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">我</div>
-          <div class="subhead">wǒ • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. I / Me (1st person singular)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我是学生。">
-            <div class="sentence-box">
-              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="shì (am)">是</span>
-              <span class="word" data-m="WORD: xuéshēng (student)"><span class="char" data-m="xué (study)">学</span><span class="char" data-m="shēng (born)">生</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">shì</span> <span class="py">xuéshēng.</span></div>
-          <div class="translation-line">I am a student.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. My / Mine (我的)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="这是我的书。">
-            <div class="sentence-box">
-              <span class="char" data-m="zhè (this)">这</span><span class="char" data-m="shì (is)">是</span>
-              <span class="word" data-m="POSSESSIVE: wǒde (my)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="de (particle)">的</span></span>
-              <span class="char" data-m="shū (book)">书</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">shì</span> <span class="py">wǒde</span> <span class="py">shū.</span></div>
-          <div class="translation-line">This is my book.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. We / Us (我们)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我们去吃饭吧。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: wǒmen (we)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="men (plural)">们</span></span>
-              <span class="char" data-m="qù (go)">去</span>
-              <span class="word" data-m="WORD: chīfàn (eat)"><span class="char" data-m="chī (eat)">吃</span><span class="char" data-m="fàn (meal)">饭</span></span>
-              <span class="char" data-m="ba (suggestion)">吧</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒmen</span> <span class="py">qù</span> <span class="py">chīfàn</span> <span class="py">ba.</span></div>
-          <div class="translation-line">Let's go eat.</div>
-        </div>
-      `
-    },
-
-    {
-      id: 'ni',
-      hanzi: '你',
-      pinyin: 'nǐ',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">你</div>
-          <div class="subhead">nǐ • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. You (singular, informal)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="你叫什么名字？">
-            <div class="sentence-box">
-              <span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="jiào (called)">叫</span>
-              <span class="word" data-m="PHRASE: shénme míngzi (what name)"><span class="char" data-m="shén (what)">什</span><span class="char" data-m="me (suffix)">么</span><span class="char" data-m="míng (name)">名</span><span class="char" data-m="zi (suffix)">字</span></span>？
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nǐ</span> <span class="py">jiào</span> <span class="py">shénme</span> <span class="py">míngzi?</span></div>
-          <div class="translation-line">What is your name?</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Your / Yours (你的)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="你的手机在哪里？">
-            <div class="sentence-box">
-              <span class="word" data-m="POSSESSIVE: nǐde (your)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="de (particle)">的</span></span>
-              <span class="word" data-m="WORD: shǒujī (mobile phone)"><span class="char" data-m="shǒu (hand)">手</span><span class="char" data-m="jī (machine)">机</span></span>
-              <span class="char" data-m="zài (at)">在</span>
-              <span class="word" data-m="PHRASE: nǎlǐ (where)"><span class="char" data-m="nǎ (which)">哪</span><span class="char" data-m="lǐ (inside)">里</span></span>？
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nǐde</span> <span class="py">shǒujī</span> <span class="py">zài</span> <span class="py">nǎlǐ?</span></div>
-          <div class="translation-line">Where is your phone?</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. You all (你们)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="你们好！">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: nǐmen (you all)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="men (plural)">们</span></span>
-              <span class="char" data-m="hǎo (good)">好</span>！
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nǐmen</span> <span class="py">hǎo!</span></div>
-          <div class="translation-line">Hello everyone!</div>
-        </div>
-      `
-    },
-
-    {
-      id: 'shi',
-      hanzi: '是',
-      pinyin: 'shì',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">是</div>
-          <div class="subhead">shì • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. To be (am / is / are)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="他是老师。">
-            <div class="sentence-box">
-              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="shì (is)">是</span>
-              <span class="word" data-m="WORD: lǎoshī (teacher)"><span class="char" data-m="lǎo (old)">老</span><span class="char" data-m="shī (master)">师</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">shì</span> <span class="py">lǎoshī.</span></div>
-          <div class="translation-line">He is a teacher.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Negation: 不是 (is not)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="这不是我的。">
-            <div class="sentence-box">
-              <span class="char" data-m="zhè (this)">这</span>
-              <span class="word" data-m="PHRASE: bú shì (is not)"><span class="char" data-m="bù (not)">不</span><span class="char" data-m="shì (is)">是</span></span>
-              <span class="word" data-m="POSSESSIVE: wǒde (mine)"><span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="de (particle)">的</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">bú shì</span> <span class="py">wǒde.</span></div>
-          <div class="translation-line">This is not mine.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. Yes / That's right</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="是的，我明白了。">
-            <div class="sentence-box">
-              <span class="word" data-m="PHRASE: shìde (yes)"><span class="char" data-m="shì (yes)">是</span><span class="char" data-m="de (particle)">的</span></span>，
-              <span class="char" data-m="wǒ (I)">我</span>
-              <span class="word" data-m="WORD: míngbai (understand)"><span class="char" data-m="míng (clear)">明</span><span class="char" data-m="bai (white)">白</span></span>
-              <span class="char" data-m="le (change)">了</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Shìde,</span> <span class="py">wǒ</span> <span class="py">míngbai</span> <span class="py">le.</span></div>
-          <div class="translation-line">Yes, I understand now.</div>
-        </div>
-      `
-    },
-
-    {
-      id: 'bu',
-      hanzi: '不',
-      pinyin: 'bù / bú',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">不</div>
-          <div class="subhead">bù • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. No / Not (general negation)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我不知道。">
-            <div class="sentence-box">
-              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="bù (not)">不</span>
-              <span class="word" data-m="WORD: zhīdào (know)"><span class="char" data-m="zhī (know)">知</span><span class="char" data-m="dào (way)">道</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">bù</span> <span class="py">zhīdào.</span></div>
-          <div class="translation-line">I don't know.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Tone sandhi: 不 + 4th tone → bú</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我不去。">
-            <div class="sentence-box">
-              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="bú (not)">不</span><span class="char" data-m="qù (go)">去</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">bú</span> <span class="py">qù.</span></div>
-          <div class="translation-line">I'm not going.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. Negating adjectives</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="今天不冷。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: jīntiān (today)"><span class="char" data-m="jīn (now)">今</span><span class="char" data-m="tiān (day)">天</span></span>
-              <span class="char" data-m="bù (not)">不</span><span class="char" data-m="lěng (cold)">冷</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Jīntiān</span> <span class="py">bù</span> <span class="py">lěng.</span></div>
-          <div class="translation-line">Today is not cold.</div>
-        </div>
-      `
-    },
-
-    {
-      id: 'ren',
-      hanzi: '人',
-      pinyin: 'rén',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">人</div>
-          <div class="subhead">rén • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. Person / People</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="那个人是谁？">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: nàge (that)"><span class="char" data-m="nà (that)">那</span><span class="char" data-m="ge (measure)">个</span></span>
-              <span class="char" data-m="rén (person)">人</span>
-              <span class="char" data-m="shì (is)">是</span>
-              <span class="char" data-m="shuí (who)">谁</span>？
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Nàge</span> <span class="py">rén</span> <span class="py">shì</span> <span class="py">shuí?</span></div>
-          <div class="translation-line">Who is that person?</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. In compound words</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="中国人很勤劳。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: zhōngguórén (Chinese person)"><span class="char" data-m="zhōng (middle)">中</span><span class="char" data-m="guó (country)">国</span><span class="char" data-m="rén (person)">人</span></span>
-              <span class="char" data-m="hěn (very)">很</span>
-              <span class="word" data-m="WORD: qínláo (hardworking)"><span class="char" data-m="qín (diligent)">勤</span><span class="char" data-m="láo (labor)">劳</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhōngguórén</span> <span class="py">hěn</span> <span class="py">qínláo.</span></div>
-          <div class="translation-line">Chinese people are very hardworking.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. Occupation suffix</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="她是商人。">
-            <div class="sentence-box">
-              <span class="char" data-m="tā (she)">她</span><span class="char" data-m="shì (is)">是</span>
-              <span class="word" data-m="WORD: shāngrén (businessman)"><span class="char" data-m="shāng (commerce)">商</span><span class="char" data-m="rén (person)">人</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">shì</span> <span class="py">shāngrén.</span></div>
-          <div class="translation-line">She is a businessperson.</div>
-        </div>
-      `
-    },
-
-    {
-      id: 'da',
-      hanzi: '大',
-      pinyin: 'dà',
-      backHTML: `
-        <div class="mm-header">
-          <div class="char-main">大</div>
-          <div class="subhead">dà • Meaning Map</div>
-        </div>
-        <div class="divider"></div>
-        <div class="meaning-item">
-          <span class="label">1. Big / Large</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="这个房间很大。">
-            <div class="sentence-box">
-              <span class="word" data-m="WORD: zhège (this)"><span class="char" data-m="zhè (this)">这</span><span class="char" data-m="ge (measure)">个</span></span>
-              <span class="word" data-m="WORD: fángjiān (room)"><span class="char" data-m="fáng (house)">房</span><span class="char" data-m="jiān (space)">间</span></span>
-              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="dà (big)">大</span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Zhège</span> <span class="py">fángjiān</span> <span class="py">hěn</span> <span class="py">dà.</span></div>
-          <div class="translation-line">This room is very big.</div>
-        </div>
-        <div class="meaning-item">
-          <span class="label">2. Older / Major</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我有一个大哥。">
-            <div class="sentence-box">
-              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="yǒu (have)">有</span>
-              <span class="word" data-m="PHRASE: yīge (one)"><span class="char" data-m="yī (one)">一</span><span class="char" data-m="ge (measure)">个</span></span>
-              <span class="word" data-m="WORD: dàgē (older brother)"><span class="char" data-m="dà (big)">大</span><span class="char" data-m="gē (brother)">哥</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">yǒu</span> <span class="py">yīge</span> <span class="py">dàgē.</span></div>
-          <div class="translation-line">I have an older brother.</div>
-        </div>
-        <div class="meaning-item" style="margin-bottom:0">
-          <span class="label">3. University (大学)</span>
-          <div class="sentence-wrap" data-clickcopy="true" data-copy="我在大学学习。">
-            <div class="sentence-box">
-              <span class="char" data-m="wǒ (I)">我</span><span class="char" data-m="zài (at)">在</span>
-              <span class="word" data-m="WORD: dàxué (university)"><span class="char" data-m="dà (big)">大</span><span class="char" data-m="xué (study)">学</span></span>
-              <span class="word" data-m="WORD: xuéxí (study)"><span class="char" data-m="xué (study)">学</span><span class="char" data-m="xí (practice)">习</span></span>。
-            </div>
-          </div>
-          <div class="pinyin-line"><span class="py">Wǒ</span> <span class="py">zài</span> <span class="py">dàxué</span> <span class="py">xuéxí.</span></div>
-          <div class="translation-line">I study at university.</div>
-        </div>
-      `
-    },
-
-  ]; // ← end of CARDS array
-
-
-  // ════════════════════════════════════════════════════════════════
-  //  SM-2 SCHEDULER
-  // ════════════════════════════════════════════════════════════════
-  const STORE_KEY   = 'hanzi_flash_v1';
-  const STREAK_KEY  = 'hanzi_flash_streak_v1';
-
-  function loadState()      { try { return JSON.parse(localStorage.getItem(STORE_KEY))  || {}; } catch(e) { return {}; } }
-  function saveState(s)     { localStorage.setItem(STORE_KEY,  JSON.stringify(s)); }
-  function loadStreak()     { try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { count: 0, lastDay: null }; } catch(e) { return { count: 0, lastDay: null }; } }
-  function saveStreak(s)    { localStorage.setItem(STREAK_KEY, JSON.stringify(s)); }
-  function getCS(state, id) { return state[id] || { interval: 0, ease: 2.5, reps: 0, due: 0 }; }
-
-  function todayStr() {
-    const d = new Date();
-    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-  }
-
-  function updateStreak(completed) {
-    const s = loadStreak();
-    const today = todayStr();
-    if (s.lastDay === today) return s;
-    const yesterday = (() => { const d = new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; })();
-    if (completed) {
-      s.count = (s.lastDay === yesterday) ? s.count + 1 : 1;
-      s.lastDay = today;
+    function uid(){
+      if (crypto?.randomUUID) return crypto.randomUUID();
+      return 'id_' + Math.random().toString(16).slice(2) + '_' + Date.now().toString(16);
     }
-    saveStreak(s);
-    return s;
-  }
 
-  function sm2(cs, rating) {
-    let { interval, ease, reps } = cs;
-    if (rating === 0) {
-      interval = 1; reps = 0;
-    } else {
-      if      (reps === 0) interval = 1;
-      else if (reps === 1) interval = 6;
-      else                 interval = Math.round(interval * ease);
-      reps++;
-      ease = Math.max(1.3, ease + [-0.15, -0.08, 0, 0.15][rating]);
-      if (rating === 1) interval = Math.max(1, Math.round(interval * 0.5));
-      if (rating === 3) interval = Math.round(interval * 1.3);
-    }
-    return { interval, ease, reps, due: Date.now() + interval * 86400000 };
-  }
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-  function fmtInterval(cs, rating) {
-    const d = sm2({ ...cs }, rating).interval;
-    if (d < 1)   return '<1d';
-    if (d < 30)  return d + 'd';
-    if (d < 365) return Math.round(d/30) + 'mo';
-    return Math.round(d/365) + 'yr';
-  }
+    function toast(message, opts={}){
+      const wrap = $('#toasts');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const msg = document.createElement('div');
+      msg.className = 'msg';
+      msg.textContent = message;
 
-  function getDue(state) {
-    const now = Date.now();
-    return CARDS.filter(c => getCS(state, c.id).due <= now);
-  }
+      const actions = document.createElement('div');
+      actions.className = 'act';
 
-  // ════════════════════════════════════════════════════════════════
-  //  APP STATE
-  // ════════════════════════════════════════════════════════════════
-  let appState = loadState();
-  let queue    = [];
-  let qIdx     = 0;
-  let curCard  = null;
-
-  // Session tracking
-  let sessTotal  = 0;
-  let sessGood   = 0; // rating >= 2
-
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    // Scroll to top on each screen change
-    window.scrollTo(0, 0);
-  }
-
-  // ── HOME ──
-  function renderHome() {
-    appState = loadState();
-    const due = getDue(appState).length;
-    document.getElementById('stat-due').textContent     = due;
-    document.getElementById('stat-total').textContent   = CARDS.length;
-    document.getElementById('stat-learned').textContent = CARDS.filter(c => getCS(appState, c.id).reps > 0).length;
-
-    // Streak
-    const streak = loadStreak();
-    document.getElementById('streak-num').textContent = streak.count;
-    document.getElementById('streak-banner').style.opacity = streak.count > 0 ? '1' : '0.4';
-
-    // Disable start if nothing due
-    const startBtn = document.getElementById('btn-start');
-    startBtn.disabled = due === 0;
-    startBtn.textContent = due > 0 ? `Start Review (${due} cards) →` : 'All Caught Up ✓';
-
-    showScreen('screen-home');
-  }
-
-  document.getElementById('btn-start').addEventListener('click', () => {
-    appState = loadState();
-    queue = getDue(appState);
-    if (!queue.length) { showDone(); return; }
-    // shuffle queue
-    for (let i = queue.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [queue[i], queue[j]] = [queue[j], queue[i]];
-    }
-    qIdx = 0;
-    sessTotal = 0;
-    sessGood  = 0;
-    showFront();
-  });
-
-  document.getElementById('btn-home').addEventListener('click', renderHome);
-
-  // ── BROWSE ──
-  document.getElementById('btn-browse').addEventListener('click', () => {
-    appState = loadState();
-    const grid = document.getElementById('browse-grid');
-    grid.innerHTML = '';
-    CARDS.forEach(c => {
-      const cs = getCS(appState, c.id);
-      const isNew    = cs.reps === 0;
-      const isDue    = !isNew && cs.due <= Date.now();
-      const badgeClass = isNew ? 'badge-new' : isDue ? 'badge-due' : 'badge-learned';
-      const div = document.createElement('div');
-      div.className = 'browse-card';
-      div.innerHTML = `
-        <div class="bc-hanzi">${c.hanzi}</div>
-        <div class="bc-pinyin">${c.pinyin}</div>
-        <div class="bc-badge ${badgeClass}"></div>
-      `;
-      grid.appendChild(div);
-    });
-    showScreen('screen-browse');
-  });
-
-  document.getElementById('btn-browse-back').addEventListener('click', renderHome);
-
-  // ── FRONT ──
-  function updateProgress() {
-    const pct = queue.length ? (qIdx / queue.length) * 100 : 0;
-    document.getElementById('progress-fill').style.width      = pct + '%';
-    document.getElementById('progress-fill-back').style.width = pct + '%';
-    const label = `${qIdx + 1} / ${queue.length}`;
-    document.getElementById('card-counter').textContent      = label;
-    document.getElementById('card-counter-back').textContent = label;
-  }
-
-  function showFront() {
-    curCard = queue[qIdx];
-    document.getElementById('front-hanzi').textContent  = curCard.hanzi;
-    const pinyinEl = document.getElementById('front-pinyin');
-    pinyinEl.textContent = curCard.pinyin;
-    pinyinEl.classList.add('hidden');
-    document.getElementById('btn-pinyin-hint').textContent = 'Show Pinyin';
-    updateProgress();
-    doClearCanvas();
-    showScreen('screen-front');
-  }
-
-  document.getElementById('btn-pinyin-hint').addEventListener('click', () => {
-    const el = document.getElementById('front-pinyin');
-    const btn = document.getElementById('btn-pinyin-hint');
-    if (el.classList.contains('hidden')) {
-      el.classList.remove('hidden');
-      btn.textContent = 'Hide Pinyin';
-    } else {
-      el.classList.add('hidden');
-      btn.textContent = 'Show Pinyin';
-    }
-  });
-
-  document.getElementById('btn-show-answer').addEventListener('click', showBack);
-
-  // ── BACK ──
-  function showBack() {
-    document.getElementById('meaning-map-content').innerHTML = curCard.backHTML;
-    const cs = getCS(appState, curCard.id);
-    ['again','hard','good','easy'].forEach((n,i) => {
-      document.getElementById('ivl-' + n).textContent = fmtInterval(cs, i);
-    });
-    updateProgress();
-    showScreen('screen-back');
-    wireBackInteractions();
-  }
-
-  document.querySelectorAll('.rating-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const rating = parseInt(btn.dataset.rating);
-      appState[curCard.id] = sm2(getCS(appState, curCard.id), rating);
-      saveState(appState);
-      sessTotal++;
-      if (rating >= 2) sessGood++;
-      qIdx++;
-      qIdx >= queue.length ? showDone() : showFront();
-    });
-  });
-
-  // ── DONE ──
-  function showDone() {
-    const pct = sessTotal > 0 ? Math.round((sessGood / sessTotal) * 100) : 0;
-    document.getElementById('sess-total').textContent = sessTotal;
-    document.getElementById('sess-good').textContent  = sessGood;
-    document.getElementById('sess-pct').textContent   = pct + '%';
-
-    if (sessTotal === 0) {
-      document.getElementById('done-emoji').textContent = '✅';
-      document.getElementById('done-title').textContent = 'All Caught Up!';
-      document.getElementById('done-sub').textContent   = 'No cards due right now. Come back tomorrow!';
-    } else {
-      const emoji = pct >= 90 ? '🌟' : pct >= 70 ? '🎉' : pct >= 50 ? '💪' : '📚';
-      document.getElementById('done-emoji').textContent = emoji;
-      document.getElementById('done-title').textContent = 'Session Complete!';
-      document.getElementById('done-sub').textContent   = pct >= 70
-        ? 'Great work! Keep up the streak.'
-        : 'Keep practicing — you\'ll get there!';
-      updateStreak(true);
-    }
-    showScreen('screen-done');
-  }
-
-  // ── KEYBOARD SHORTCUTS ──
-  document.addEventListener('keydown', e => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    const active = document.querySelector('.screen.active')?.id;
-
-    if (active === 'screen-front') {
-      if (e.code === 'Space') { e.preventDefault(); showBack(); }
-      if (e.key === 'p' || e.key === 'P') {
-        const el = document.getElementById('front-pinyin');
-        const btn = document.getElementById('btn-pinyin-hint');
-        el.classList.toggle('hidden');
-        btn.textContent = el.classList.contains('hidden') ? 'Show Pinyin' : 'Hide Pinyin';
+      if (opts.detail){
+        const d = document.createElement('span');
+        d.className = 'small';
+        d.textContent = opts.detail;
+        msg.appendChild(d);
       }
-    }
 
-    if (active === 'screen-back') {
-      const map = { '1': 0, '2': 1, '3': 2, '4': 3 };
-      if (map[e.key] !== undefined) {
-        const rating = map[e.key];
-        appState[curCard.id] = sm2(getCS(appState, curCard.id), rating);
-        saveState(appState);
-        sessTotal++;
-        if (rating >= 2) sessGood++;
-        qIdx++;
-        qIdx >= queue.length ? showDone() : showFront();
+      if (opts.actionText && typeof opts.onAction === 'function'){
+        const b = document.createElement('button');
+        b.className = 'btn small primary';
+        b.textContent = opts.actionText;
+        b.onclick = () => { try{ opts.onAction(); } finally { t.remove(); } };
+        actions.appendChild(b);
       }
-    }
-  });
 
-  // ── TOAST & COPY ──
-  const toastEl = document.getElementById('toast');
-  let toastTimer = null;
+      const x = document.createElement('button');
+      x.className = 'btn small';
+      x.textContent = 'OK';
+      x.onclick = () => t.remove();
+      actions.appendChild(x);
 
-  function showToast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
-  }
+      t.appendChild(msg);
+      t.appendChild(actions);
+      wrap.appendChild(t);
 
-  async function copyText(text) {
-    try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; } } catch(e) {}
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0';
-      document.body.appendChild(ta); ta.select();
-      const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
-    } catch(e) { return false; }
-  }
-
-  function wireBackInteractions() {
-    const map = document.getElementById('meaning-map-content');
-
-    map.querySelector('.char-main')?.addEventListener('click', async e => {
-      e.stopPropagation();
-      const txt = e.currentTarget.textContent.trim();
-      showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
-    });
-
-    map.querySelectorAll('.char').forEach(ch => {
-      ch.addEventListener('click', async e => {
-        e.stopPropagation();
-        const txt = ch.textContent.trim();
-        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
-      });
-    });
-
-    map.querySelectorAll('.word').forEach(w => {
-      w.addEventListener('click', async e => {
-        if (e.target.closest('.char')) return;
-        e.stopPropagation();
-        const txt = w.textContent.replace(/\s+/g,'').trim();
-        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
-      });
-    });
-
-    map.querySelectorAll('.sentence-wrap[data-clickcopy]').forEach(wrap => {
-      wrap.addEventListener('click', async e => {
-        if (e.target.closest('.word') || e.target.closest('.char')) return;
-        const txt = wrap.dataset.copy || '';
-        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
-      });
-    });
-
-    map.querySelectorAll('.word .char').forEach(ch => {
-      const addSuppress    = () => ch.closest('.word')?.classList.add('suppress-word-tooltip');
-      const removeSuppress = () => ch.closest('.word')?.classList.remove('suppress-word-tooltip');
-      ch.addEventListener('mouseenter', addSuppress);
-      ch.addEventListener('mouseleave', removeSuppress);
-      ch.addEventListener('touchstart', () => { addSuppress(); setTimeout(removeSuppress, 800); }, { passive: true });
-    });
-  }
-
-  // ════════════════════════════════════════════════════════════════
-  //  DRAWING PAD
-  // ════════════════════════════════════════════════════════════════
-  (function initDrawPad() {
-    const canvas   = document.getElementById('drawingCanvas');
-    const clearBtn = document.getElementById('clearDrawBtn');
-    const undoBtn  = document.getElementById('undoDrawBtn');
-    const ctx      = canvas.getContext('2d');
-    let isDrawing  = false;
-    let rawPoints  = [];
-    let undoStack  = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
-
-    function applyStyle() {
-      ctx.lineWidth = 14; ctx.lineCap = 'square'; ctx.lineJoin = 'miter'; ctx.miterLimit = 10;
-      ctx.strokeStyle = '#4d90d6'; ctx.shadowColor = 'rgba(60,120,210,0.45)'; ctx.shadowBlur = 8;
-    }
-    applyStyle();
-
-    function getCoords(e) {
-      const r = canvas.getBoundingClientRect();
-      const sx = canvas.width / r.width, sy = canvas.height / r.height;
-      const s = e.touches?.length ? e.touches[0] : e;
-      return { x: (s.clientX - r.left) * sx, y: (s.clientY - r.top) * sy };
+      const ttl = opts.ttl ?? 3800;
+      if (ttl > 0) setTimeout(() => { if (t.isConnected) t.remove(); }, ttl);
     }
 
-    const restore = snap => ctx.putImageData(snap, 0, 0);
-    const snap    = ()   => ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    function chaikin(pts, passes) {
-      let r = pts;
-      for (let p = 0; p < (passes||3); p++) {
-        const n = [r[0]];
-        for (let i = 0; i < r.length-1; i++) {
-          const a = r[i], b = r[i+1];
-          n.push({ x:.75*a.x+.25*b.x, y:.75*a.y+.25*b.y });
-          n.push({ x:.25*a.x+.75*b.x, y:.25*a.y+.75*b.y });
-        }
-        n.push(r[r.length-1]); r = n;
-      }
-      return r;
+    function fmtDateTime(ts){
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return d.toLocaleString(undefined, { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
     }
 
-    function catmullSeg(p0,p1,p2,p3) {
-      ctx.bezierCurveTo(
-        p1.x+(p2.x-p0.x)/3, p1.y+(p2.y-p0.y)/3,
-        p2.x-(p3.x-p1.x)/3, p2.y-(p3.y-p1.y)/3,
-        p2.x, p2.y
+    function isCJK(ch){
+      const code = ch.codePointAt(0);
+      return (
+        (code >= 0x4E00 && code <= 0x9FFF) ||  // CJK Unified
+        (code >= 0x3400 && code <= 0x4DBF) ||  // Extension A
+        (code >= 0xF900 && code <= 0xFAFF) ||  // Compatibility
+        (code >= 0x20000 && code <= 0x2A6DF)   // Extension B (rare)
       );
     }
 
-    function drawLivePreview(pts) {
-      if (pts.length < 2) return;
-      const s = chaikin(pts,3);
-      const g0 = {x:2*s[0].x-s[1].x, y:2*s[0].y-s[1].y};
-      const gN = {x:2*s[s.length-1].x-s[s.length-2].x, y:2*s[s.length-1].y-s[s.length-2].y};
-      const all = [g0,...s,gN];
-      ctx.beginPath(); ctx.moveTo(all[1].x, all[1].y);
-      if (all.length<=3) ctx.lineTo(all[all.length-2].x, all[all.length-2].y);
-      else for (let i=1;i<all.length-2;i++) catmullSeg(all[i-1],all[i],all[i+1],all[i+2]);
-      ctx.stroke();
+    function splitHanzi(str){
+      const out = [];
+      for (const ch of (str || '')){
+        if (isCJK(ch)) out.push(ch);
+      }
+      return out.length ? out : [str || ''];
     }
 
-    function beautifyAndDraw(pts) {
-      if (pts.length < 2) return;
-      const p0 = pts[0], pN = pts[pts.length-1];
-      const arc = [0];
-      for (let i=1;i<pts.length;i++) {
-        const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
-        arc.push(arc[i-1]+Math.sqrt(dx*dx+dy*dy));
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        toast('Copied ✔', { detail: text.length > 28 ? (text.slice(0,28)+'…') : text, ttl: 2000 });
+      }catch(e){
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        toast('Copied ✔', { ttl: 2000 });
       }
-      const total = arc[arc.length-1];
-      if (total < 2) { ctx.beginPath(); ctx.arc(p0.x,p0.y,3,0,Math.PI*2); ctx.fillStyle='#4d90d6'; ctx.fill(); return; }
-      const tArr = arc.map(l => l/total);
-      const cdx=pN.x-p0.x, cdy=pN.y-p0.y, cLen=Math.sqrt(cdx*cdx+cdy*cdy);
-      let maxDev=0;
-      for (let j=1;j<pts.length-1;j++) {
-        const ex=pts[j].x-p0.x, ey=pts[j].y-p0.y;
-        const dev = cLen<1 ? Math.sqrt(ex*ex+ey*ey) : Math.abs(ex*cdy-ey*cdx)/cLen;
-        if (dev>maxDev) maxDev=dev;
-      }
-      applyStyle();
-      if (cLen<1 || maxDev/cLen<0.10) {
-        ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(pN.x,pN.y); ctx.stroke(); return;
-      }
-      let sx=0,sy=0,sw=0;
-      for (let k=1;k<pts.length-1;k++) {
-        const ti=tArr[k], wi=2*ti*(1-ti);
-        if (wi<1e-4) continue;
-        sx+=wi*(pts[k].x-(1-ti)*(1-ti)*p0.x-ti*ti*pN.x);
-        sy+=wi*(pts[k].y-(1-ti)*(1-ti)*p0.y-ti*ti*pN.y);
-        sw+=wi*wi;
-      }
-      const P1 = sw<1e-6 ? {x:(p0.x+pN.x)/2,y:(p0.y+pN.y)/2} : {x:sx/sw,y:sy/sw};
-      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.quadraticCurveTo(P1.x,P1.y,pN.x,pN.y); ctx.stroke();
     }
 
-    const onStart = e => { e.preventDefault(); isDrawing=true; rawPoints=[getCoords(e)]; };
-    const onMove  = e => {
-      if (!isDrawing) return; e.preventDefault();
-      const c=getCoords(e), last=rawPoints[rawPoints.length-1];
-      const dx=c.x-last.x, dy=c.y-last.y;
-      if (dx*dx+dy*dy<4) return;
-      rawPoints.push(c);
-      restore(undoStack[undoStack.length-1]); applyStyle(); drawLivePreview(rawPoints);
+    /***************
+     * Pinyin tools
+     ***************/
+    const toneMap = {
+      a: ['ā','á','ǎ','à'],
+      e: ['ē','é','ě','è'],
+      i: ['ī','í','ǐ','ì'],
+      o: ['ō','ó','ǒ','ò'],
+      u: ['ū','ú','ǔ','ù'],
+      ü:['ǖ','ǘ','ǚ','ǜ'],
+      A: ['Ā','Á','Ǎ','À'],
+      E: ['Ē','É','Ě','È'],
+      I: ['Ī','Í','Ǐ','Ì'],
+      O: ['Ō','Ó','Ǒ','Ò'],
+      U: ['Ū','Ú','Ǔ','Ù'],
+      Ü:['Ǖ','Ǘ','Ǚ','Ǜ'],
     };
-    const onEnd = () => {
-      if (!isDrawing) return; isDrawing=false;
-      restore(undoStack[undoStack.length-1]); beautifyAndDraw(rawPoints);
-      undoStack.push(snap()); rawPoints=[];
+
+    const markedToBaseTone = new Map([
+      ['ā',['a',1]],['á',['a',2]],['ǎ',['a',3]],['à',['a',4]],
+      ['ē',['e',1]],['é',['e',2]],['ě',['e',3]],['è',['e',4]],
+      ['ī',['i',1]],['í',['i',2]],['ǐ',['i',3]],['ì',['i',4]],
+      ['ō',['o',1]],['ó',['o',2]],['ǒ',['o',3]],['ò',['o',4]],
+      ['ū',['u',1]],['ú',['u',2]],['ǔ',['u',3]],['ù',['u',4]],
+      ['ǖ',['ü',1]],['ǘ',['ü',2]],['ǚ',['ü',3]],['ǜ',['ü',4]],
+      ['Ā',['A',1]],['Á',['A',2]],['Ǎ',['A',3]],['À',['A',4]],
+      ['Ē',['E',1]],['É',['E',2]],['Ě',['E',3]],['È',['E',4]],
+      ['Ī',['I',1]],['Í',['I',2]],['Ǐ',['I',3]],['Ì',['I',4]],
+      ['Ō',['O',1]],['Ó',['O',2]],['Ǒ',['O',3]],['Ò',['O',4]],
+      ['Ū',['U',1]],['Ú',['U',2]],['Ǔ',['U',3]],['Ù',['U',4]],
+      ['Ǖ',['Ü',1]],['Ǘ',['Ü',2]],['Ǚ',['Ü',3]],['Ǜ',['Ü',4]],
+    ]);
+
+    function detectToneFromMarked(syll){
+      let tone = 5;
+      for (const ch of syll){
+        if (markedToBaseTone.has(ch)){
+          tone = markedToBaseTone.get(ch)[1];
+          break;
+        }
+      }
+      return tone;
+    }
+
+    function normalizeUmlaut(s){
+      return (s || '')
+        .replace(/u:/gi, m => (m[0] === 'U' ? 'Ü' : 'ü'))
+        .replace(/v/gi, m => (m === 'V' ? 'Ü' : 'ü'));
+    }
+
+    function numericSyllableToMarked(s){
+      // expects one syllable possibly ending with tone number
+      const m = s.match(/^(.+?)([1-5])$/);
+      if (!m) return normalizeUmlaut(s);
+      let base = normalizeUmlaut(m[1]);
+      const tone = parseInt(m[2],10);
+      if (tone === 5) return base;
+
+      // rules: a/e first, ou -> o, else iu->u, ui->i, else last vowel
+      const lower = base.toLowerCase();
+
+      const vowels = ['a','e','o','i','u','ü'];
+      let idx = -1;
+
+      const findVowelIndex = (v) => base.toLowerCase().indexOf(v);
+
+      if (lower.includes('a')) idx = findVowelIndex('a');
+      else if (lower.includes('e')) idx = findVowelIndex('e');
+      else if (lower.includes('ou')) idx = findVowelIndex('o');
+      else if (lower.includes('iu')) idx = findVowelIndex('u');
+      else if (lower.includes('ui')) idx = findVowelIndex('i');
+      else{
+        // last vowel
+        for (let i = base.length - 1; i >= 0; i--){
+          const ch = base[i].toLowerCase();
+          if (vowels.includes(ch)) { idx = i; break; }
+        }
+      }
+
+      if (idx === -1) return base; // nothing to mark
+
+      const ch = base[idx];
+      const key = ch === 'Ü' ? 'Ü' : ch;
+      const lowerKey = ch === 'ü' ? 'ü' : ch.toLowerCase();
+
+      const mapKey = (toneMap[ch] ? ch : (toneMap[lowerKey] ? lowerKey : null));
+      if (!mapKey) return base;
+
+      const marked = toneMap[mapKey][tone - 1];
+      return base.slice(0, idx) + marked + base.slice(idx+1);
+    }
+
+    function pinyinToMarked(p){
+      p = (p || '').trim();
+      if (!p) return '';
+      // split by spaces but keep punctuation
+      const parts = p.split(/(\s+)/);
+      return parts.map(part=>{
+        if (/^\s+$/.test(part)) return part;
+        // also handle hyphenated forms
+        return part.split('-').map(syl=>{
+          // strip trailing punctuation for conversion then add back
+          const m = syl.match(/^(.+?)([.,!?;:，。！？；：])?$/);
+          const core = m ? m[1] : syl;
+          const punct = m ? (m[2] || '') : '';
+          const converted = numericSyllableToMarked(core);
+          return converted + punct;
+        }).join('-');
+      }).join('');
+    }
+
+    function splitPinyinSyllables(p){
+      // output array of {text, tone}
+      const marked = pinyinToMarked(p);
+      const raw = marked.trim();
+      if (!raw) return [];
+      // split on whitespace
+      const tokens = raw.split(/\s+/).filter(Boolean);
+      return tokens.map(t => ({ text: t, tone: detectToneFromMarked(t) }));
+    }
+
+    /****************
+     * TTS (Mandarin)
+     ****************/
+    const TTS = {
+      enabled: true,
+      autoSpeakFront: false,
+      autoSpeakBack: false,
+      voiceURI: null,
+
+      getVoices(){
+        return window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+      },
+
+      pickBestVoice(){
+        const voices = this.getVoices();
+        // prefer zh-CN / Mandarin
+        const preferred = voices.find(v => /zh(-|_)CN/i.test(v.lang) || /zh/i.test(v.lang));
+        return preferred || voices[0] || null;
+      },
+
+      speak(text){
+        if (!this.enabled) return;
+        if (!('speechSynthesis' in window)) {
+          toast('TTS not supported in this browser.', { ttl: 2500 });
+          return;
+        }
+        const t = (text || '').trim();
+        if (!t) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        const v = this.pickBestVoice();
+        if (v) u.voice = v;
+        u.rate = 0.95;
+        u.pitch = 1.0;
+        u.volume = 1.0;
+        window.speechSynthesis.speak(u);
+      }
     };
 
-    canvas.addEventListener('mousedown',  onStart);
-    canvas.addEventListener('mousemove',  onMove);
-    canvas.addEventListener('mouseup',    onEnd);
-    canvas.addEventListener('mouseleave', onEnd);
-    canvas.addEventListener('touchstart', onStart, {passive:false});
-    canvas.addEventListener('touchmove',  onMove,  {passive:false});
-    canvas.addEventListener('touchend',   onEnd);
-    canvas.addEventListener('touchcancel',onEnd);
+    /****************
+     * IndexedDB layer
+     ****************/
+    const DB = {
+      name: 'hanzicards_db',
+      version: 1,
+      db: null,
 
-    undoBtn.addEventListener('click', () => {
-      if (undoStack.length>1) { undoStack.pop(); restore(undoStack[undoStack.length-1]); }
-    });
+      async open(){
+        if (this.db) return this.db;
+        this.db = await new Promise((resolve, reject)=>{
+          const req = indexedDB.open(this.name, this.version);
+          req.onupgradeneeded = () => {
+            const db = req.result;
 
-    clearBtn.addEventListener('click', doClearCanvas);
+            const meta = db.createObjectStore('meta', { keyPath: 'key' });
 
-    window._clearCanvas = () => {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      undoStack=[snap()]; rawPoints=[];
+            const decks = db.createObjectStore('decks', { keyPath: 'id' });
+            decks.createIndex('byUpdatedAt', 'updatedAt');
+
+            const cards = db.createObjectStore('cards', { keyPath: 'id' });
+            cards.createIndex('byDeck', 'deckId');
+            cards.createIndex('byDue', 'dueAt');
+            cards.createIndex('byDeckDue', ['deckId', 'dueAt']);
+            cards.createIndex('byUpdatedAt', 'updatedAt');
+
+            // seed meta
+            meta.put({ key: 'settings', value: {
+              dailyGoal: 30,
+              showPinyinOnFront: true,
+              showMeaningOnFront: false,
+              toneColors: true,
+              ttsEnabled: true,
+              autoSpeakFront: false,
+              autoSpeakBack: false,
+              practiceOverlay: true,
+            }, updatedAt: now() });
+
+            meta.put({ key: 'stats', value: {
+              dateKey: '', reviewedToday: 0, lastReviewAt: 0
+            }, updatedAt: now() });
+
+            meta.put({ key: 'app', value: {
+              createdAt: now(),
+              schema: 1
+            }, updatedAt: now() });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        return this.db;
+      },
+
+      tx(storeNames, mode='readonly'){
+        return this.db.transaction(storeNames, mode);
+      },
+
+      async getMeta(key){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['meta'], 'readonly');
+          const req = tx.objectStore('meta').get(key);
+          req.onsuccess = () => resolve(req.result?.value ?? null);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async setMeta(key, value){
+        await this.open();
+        const rec = { key, value, updatedAt: now() };
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['meta'], 'readwrite');
+          tx.objectStore('meta').put(rec);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async getDecks(){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['decks'], 'readonly');
+          const req = tx.objectStore('decks').getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async upsertDeck(deck){
+        await this.open();
+        deck.updatedAt = now();
+        if (!deck.createdAt) deck.createdAt = deck.updatedAt;
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['decks'], 'readwrite');
+          tx.objectStore('decks').put(deck);
+          tx.oncomplete = () => resolve(deck);
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async deleteDeck(deckId){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['decks','cards'], 'readwrite');
+          tx.objectStore('decks').delete(deckId);
+
+          // delete all cards in deck
+          const idx = tx.objectStore('cards').index('byDeck');
+          const range = IDBKeyRange.only(deckId);
+          idx.openCursor(range).onsuccess = (e)=>{
+            const cur = e.target.result;
+            if (cur){
+              cur.delete();
+              cur.continue();
+            }
+          };
+
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async getCardsByDeck(deckId){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readonly');
+          const idx = tx.objectStore('cards').index('byDeck');
+          const req = idx.getAll(IDBKeyRange.only(deckId));
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async getCard(cardId){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readonly');
+          const req = tx.objectStore('cards').get(cardId);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async upsertCard(card){
+        await this.open();
+        card.updatedAt = now();
+        if (!card.createdAt) card.createdAt = card.updatedAt;
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readwrite');
+          tx.objectStore('cards').put(card);
+          tx.oncomplete = () => resolve(card);
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async deleteCard(cardId){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readwrite');
+          tx.objectStore('cards').delete(cardId);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async countDue(deckId=null, whenTs=now()){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readonly');
+          const store = tx.objectStore('cards');
+          const idx = deckId ? store.index('byDeckDue') : store.index('byDue');
+          const range = deckId
+            ? IDBKeyRange.bound([deckId, 0], [deckId, whenTs])
+            : IDBKeyRange.bound(0, whenTs);
+
+          let count = 0;
+          idx.openCursor(range).onsuccess = (e)=>{
+            const cur = e.target.result;
+            if (!cur){ resolve(count); return; }
+            count++;
+            cur.continue();
+          };
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async getDueCards(deckId=null, limit=40, whenTs=now()){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readonly');
+          const store = tx.objectStore('cards');
+          const idx = deckId ? store.index('byDeckDue') : store.index('byDue');
+          const range = deckId
+            ? IDBKeyRange.bound([deckId, 0], [deckId, whenTs])
+            : IDBKeyRange.bound(0, whenTs);
+
+          const out = [];
+          idx.openCursor(range).onsuccess = (e)=>{
+            const cur = e.target.result;
+            if (!cur){ resolve(out); return; }
+            out.push(cur.value);
+            if (out.length >= limit){ resolve(out); return; }
+            cur.continue();
+          };
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
+      async exportAll(){
+        await this.open();
+        const [decks, cards] = await Promise.all([this.getDecks(), this._getAllCards()]);
+        const settings = await this.getMeta('settings');
+        const stats = await this.getMeta('stats');
+        const app = await this.getMeta('app');
+        return { version: 1, exportedAt: now(), decks, cards, settings, stats, app };
+      },
+
+      async _getAllCards(){
+        await this.open();
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['cards'], 'readonly');
+          const req = tx.objectStore('cards').getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      },
+
+      async importAll(data, mode='merge'){
+        // mode: 'merge' = upsert by id
+        await this.open();
+        const decks = Array.isArray(data?.decks) ? data.decks : [];
+        const cards = Array.isArray(data?.cards) ? data.cards : [];
+        const settings = data?.settings ?? null;
+
+        return await new Promise((resolve, reject)=>{
+          const tx = this.tx(['decks','cards','meta'], 'readwrite');
+          const ds = tx.objectStore('decks');
+          const cs = tx.objectStore('cards');
+          const ms = tx.objectStore('meta');
+
+          for (const d of decks){
+            if (!d?.id) continue;
+            d.updatedAt = now();
+            if (!d.createdAt) d.createdAt = d.updatedAt;
+            ds.put(d);
+          }
+
+          for (const c of cards){
+            if (!c?.id) continue;
+            c.updatedAt = now();
+            if (!c.createdAt) c.createdAt = c.updatedAt;
+            cs.put(c);
+          }
+
+          if (settings){
+            ms.put({ key:'settings', value: settings, updatedAt: now() });
+          }
+
+          tx.oncomplete = () => resolve({ decks: decks.length, cards: cards.length });
+          tx.onerror = () => reject(tx.error);
+        });
+      }
     };
-  })();
 
-  function doClearCanvas() { window._clearCanvas?.(); }
+    /****************
+     * SRS scheduling
+     ****************/
+    function ensureSrs(card){
+      // basic SM-2-ish fields
+      if (typeof card.ease !== 'number') card.ease = 2.5;
+      if (typeof card.intervalDays !== 'number') card.intervalDays = 0;
+      if (typeof card.reps !== 'number') card.reps = 0;
+      if (typeof card.lapses !== 'number') card.lapses = 0;
+      if (typeof card.dueAt !== 'number') card.dueAt = now();
+      if (typeof card.suspended !== 'boolean') card.suspended = false;
+      if (!card.lastReviewedAt) card.lastReviewedAt = 0;
+      return card;
+    }
 
-  // ════════════════════════════════════════════════════════════════
-  //  SERVICE WORKER
-  // ════════════════════════════════════════════════════════════════
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW registration failed:', e));
-  }
+    function schedule(card, rating){
+      // rating: 0=Again, 1=Hard, 2=Good, 3=Easy
+      ensureSrs(card);
+      const t = now();
 
-  // ── INIT ──
-  console.log('✅ Page loaded at:', new Date().toLocaleTimeString());
-  renderHome();
+      // suspended cards do nothing
+      if (card.suspended) return card;
+
+      const easeDelta = [ -0.20, -0.15, 0.00, +0.10 ][rating] ?? 0;
+      card.ease = clamp(card.ease + easeDelta, 1.3, 2.8);
+
+      const firstLearn = card.reps === 0;
+
+      if (rating === 0){
+        // Again: short relearn step (10 min), reset reps
+        card.reps = 0;
+        card.lapses += 1;
+        card.intervalDays = 0;
+        card.dueAt = t + 10 * 60 * 1000;
+      } else {
+        // progress
+        card.reps += 1;
+
+        let baseInterval;
+        if (firstLearn){
+          baseInterval = (rating === 1) ? 1 : (rating === 2) ? 2 : 3;
+        } else {
+          const mult = (rating === 1) ? 1.2 : (rating === 2) ? card.ease : (card.ease * 1.35);
+          baseInterval = Math.max(1, Math.round((card.intervalDays || 1) * mult));
+        }
+        card.intervalDays = clamp(baseInterval, 1, 3650);
+        card.dueAt = t + card.intervalDays * dayMs;
+      }
+
+      card.lastReviewedAt = t;
+      return card;
+    }
+
+    /****************
+     * App state/UI
+     ****************/
+    const App = {
+      decks: [],
+      activeDeckId: null,
+      settings: null,
+      stats: null,
+
+      // study session state
+      queue: [],
+      current: null,
+      flipped: false,
+
+      // editor state
+      editingCardId: null,
+
+      installPrompt: null,
+      swReg: null,
+
+      async init(){
+        await DB.open();
+        await this.seedIfEmpty();
+        await this.loadMeta();
+        await this.loadDecks();
+
+        this.bindHeader();
+        this.bindTabs();
+        this.bindDialogs();
+        this.bindKeyboard();
+        this.setupInstall();
+        this.setupSW();
+
+        this.route();
+        window.addEventListener('hashchange', () => this.route());
+      },
+
+      async seedIfEmpty(){
+        const decks = await DB.getDecks();
+        if (decks.length) return;
+
+        const d = await DB.upsertDeck({
+          id: uid(),
+          name: 'Starter (Chinese Basics)',
+          createdAt: now(),
+          updatedAt: now(),
+        });
+
+        const samples = [
+          { front:'你好', pinyin:'ni3 hao3', meaning:'hello; hi', example:'你好！很高兴认识你。' },
+          { front:'谢谢', pinyin:'xie4 xie4', meaning:'thank you', example:'谢谢你的帮助。' },
+          { front:'对', pinyin:'dui4', meaning:'correct; right; (toward)', example:'你说得对。' },
+          { front:'不客气', pinyin:'bu2 ke4 qi4', meaning:"you're welcome", example:'—谢谢！—不客气。' },
+        ];
+
+        for (const s of samples){
+          await DB.upsertCard(ensureSrs({
+            id: uid(),
+            deckId: d.id,
+            front: s.front,
+            pinyin: s.pinyin,
+            meaning: s.meaning,
+            example: s.example,
+            tags: '',
+            notes: '',
+            createdAt: now(),
+            updatedAt: now(),
+            dueAt: now(), // due immediately
+          }));
+        }
+      },
+
+      async loadMeta(){
+        this.settings = await DB.getMeta('settings');
+        this.stats = await DB.getMeta('stats');
+
+        // apply settings to TTS
+        TTS.enabled = !!this.settings.ttsEnabled;
+        TTS.autoSpeakFront = !!this.settings.autoSpeakFront;
+        TTS.autoSpeakBack = !!this.settings.autoSpeakBack;
+
+        // roll daily stats if day changed
+        const dk = new Date().toISOString().slice(0,10);
+        if (this.stats?.dateKey !== dk){
+          this.stats.dateKey = dk;
+          this.stats.reviewedToday = 0;
+          await DB.setMeta('stats', this.stats);
+        }
+      },
+
+      async loadDecks(){
+        this.decks = (await DB.getDecks()).sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0));
+        if (!this.activeDeckId){
+          this.activeDeckId = this.decks[0]?.id ?? null;
+        }
+        // validate active deck
+        if (this.activeDeckId && !this.decks.some(d=>d.id === this.activeDeckId)){
+          this.activeDeckId = this.decks[0]?.id ?? null;
+        }
+        this.renderDeckSelect();
+      },
+
+      bindHeader(){
+        $('#syncHintBtn').addEventListener('click', async ()=>{
+          const due = await DB.countDue(this.activeDeckId);
+          toast(navigator.onLine ? 'Online. Your data stays local.' : 'Offline. You can still study.', {
+            detail: `Due now: ${due} · Local database (IndexedDB)`,
+            ttl: 4000
+          });
+        });
+
+        $('#deckSelect').addEventListener('change', async (e)=>{
+          this.activeDeckId = e.target.value || null;
+          await this.refreshIfStudy();
+          this.route(true);
+        });
+      },
+
+      renderDeckSelect(){
+        const sel = $('#deckSelect');
+        sel.innerHTML = '';
+        if (!this.decks.length){
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No decks';
+          sel.appendChild(opt);
+          return;
+        }
+        for (const d of this.decks){
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          if (d.id === this.activeDeckId) opt.selected = true;
+          sel.appendChild(opt);
+        }
+      },
+
+      bindTabs(){
+        const setActive = () => {
+          const h = (location.hash || '#study').replace('#','');
+          for (const [id, tab] of Object.entries({
+            decks: $('#tabDecks'),
+            study: $('#tabStudy'),
+            add: $('#tabAdd'),
+            search: $('#tabSearch'),
+            settings: $('#tabSettings')
+          })){
+            tab.classList.toggle('active', h.startsWith(id));
+          }
+        };
+        setActive();
+        window.addEventListener('hashchange', setActive);
+      },
+
+      bindDialogs(){
+        const deckDlg = $('#deckDlg');
+        const bulkDlg = $('#bulkDlg');
+        const confirmDlg = $('#confirmDlg');
+
+        const close = (dlg)=> { try{ dlg.close(); }catch{} };
+
+        $('#deckDlgClose').onclick = ()=> close(deckDlg);
+        $('#deckDlgCancel').onclick = ()=> close(deckDlg);
+
+        $('#bulkDlgClose').onclick = ()=> close(bulkDlg);
+        $('#bulkCancel').onclick = ()=> close(bulkDlg);
+
+        $('#confirmClose').onclick = ()=> close(confirmDlg);
+        $('#confirmNo').onclick = ()=> close(confirmDlg);
+      },
+
+      bindKeyboard(){
+        window.addEventListener('keydown', (e)=>{
+          // ignore typing inside inputs
+          const tag = (document.activeElement?.tagName || '').toLowerCase();
+          if (['input','textarea','select'].includes(tag)) return;
+
+          const view = (location.hash || '#study').slice(1);
+          if (view.startsWith('study')){
+            if (e.key === ' '){
+              e.preventDefault();
+              this.onFlip();
+            }
+            if (this.flipped){
+              if (e.key === '1') this.onRate(0);
+              if (e.key === '2') this.onRate(1);
+              if (e.key === '3') this.onRate(2);
+              if (e.key === '4') this.onRate(3);
+            }
+            if (e.key.toLowerCase() === 'a'){
+              const txt = this.current?.front || '';
+              if (txt) TTS.speak(txt);
+            }
+          }
+        });
+      },
+
+      setupInstall(){
+        const btn = $('#installBtn');
+        window.addEventListener('beforeinstallprompt', (e)=>{
+          e.preventDefault();
+          this.installPrompt = e;
+          btn.style.display = '';
+        });
+
+        btn.addEventListener('click', async ()=>{
+          if (!this.installPrompt) return;
+          this.installPrompt.prompt();
+          const res = await this.installPrompt.userChoice;
+          if (res?.outcome === 'accepted'){
+            toast('Installed ✔', { ttl: 2500 });
+          }
+          this.installPrompt = null;
+          btn.style.display = 'none';
+        });
+      },
+
+      async setupSW(){
+        if (!('serviceWorker' in navigator)) return;
+        try{
+          this.swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+
+          // update found
+          this.swReg.addEventListener('updatefound', ()=>{
+            const nw = this.swReg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', ()=>{
+              if (nw.state === 'installed'){
+                if (navigator.serviceWorker.controller){
+                  toast('Update available', {
+                    detail: 'Tap “Reload” to use the newest version.',
+                    actionText: 'Reload',
+                    onAction: () => location.reload(),
+                    ttl: 0
+                  });
+                } else {
+                  toast('Offline ready ✔', { detail: 'Cached for offline use.', ttl: 2800 });
+                }
+              }
+            });
+          });
+
+          // allow SW to message for skipWaiting reload
+          navigator.serviceWorker.addEventListener('message', (e)=>{
+            if (e.data?.type === 'RELOAD') location.reload();
+          });
+
+        }catch(err){
+          console.warn('SW register failed', err);
+        }
+      },
+
+      async route(soft=false){
+        const hash = (location.hash || '#study').slice(1);
+        const view = $('#view');
+
+        if (!soft){
+          view.innerHTML = '';
+        }
+
+        if (hash.startsWith('decks')) return await this.renderDecks();
+        if (hash.startsWith('study')) return await this.renderStudy();
+        if (hash.startsWith('add')) return await this.renderAdd();
+        if (hash.startsWith('edit/')){
+          const id = hash.split('/')[1];
+          return await this.renderAdd(id);
+        }
+        if (hash.startsWith('search')) return await this.renderSearch();
+        if (hash.startsWith('settings')) return await this.renderSettings();
+
+        location.hash = '#study';
+      },
+
+      async refreshIfStudy(){
+        const hash = (location.hash || '#study').slice(1);
+        if (hash.startsWith('study')){
+          await this.prepareStudyQueue(true);
+          await this.renderStudy(true);
+        }
+      },
+
+      /************
+       * Decks view
+       ************/
+      async renderDecks(){
+        const view = $('#view');
+        const due = await DB.countDue(this.activeDeckId);
+
+        const totalDecks = this.decks.length;
+
+        view.innerHTML = `
+          <div class="grid cols2">
+            <section class="card">
+              <div class="hd">
+                <div>
+                  <h2>Decks</h2>
+                  <div class="meta">${totalDecks} deck(s) · Due in selected deck: ${due}</div>
+                </div>
+                <div class="row">
+                  <button class="btn small primary" id="newDeckBtn">＋ New deck</button>
+                </div>
+              </div>
+              <div class="bd">
+                <div class="list" id="deckList"></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="hd">
+                <h2>Today</h2>
+                <div class="meta">Progress & shortcuts</div>
+              </div>
+              <div class="bd">
+                <div class="kpi">
+                  <div class="pill"><b>${this.stats.reviewedToday}</b> reviewed</div>
+                  <div class="pill"><b>${this.settings.dailyGoal}</b> daily goal</div>
+                  <div class="pill"><b>${fmtDateTime(this.stats.lastReviewAt)}</b> last review</div>
+                </div>
+                <div class="divider"></div>
+                <div class="hint">
+                  Study shortcuts: <span class="kbd">Space</span> flip ·
+                  <span class="kbd">1</span> again · <span class="kbd">2</span> hard ·
+                  <span class="kbd">3</span> good · <span class="kbd">4</span> easy ·
+                  <span class="kbd">A</span> speak
+                </div>
+                <div class="divider"></div>
+                <div class="row">
+                  <a class="btn primary" href="#study">Start studying →</a>
+                  <a class="btn" href="#add">Add a card →</a>
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        $('#newDeckBtn').onclick = () => this.openDeckDialog({ mode:'create' });
+        await this.renderDeckList();
+      },
+
+      async renderDeckList(){
+        const list = $('#deckList');
+        list.innerHTML = '';
+
+        for (const d of this.decks){
+          const totalCards = (await DB.getCardsByDeck(d.id)).length;
+          const due = await DB.countDue(d.id);
+          const active = d.id === this.activeDeckId;
+
+          const item = document.createElement('div');
+          item.className = 'item';
+
+          const left = document.createElement('div');
+          left.className = 'left';
+
+          const title = document.createElement('div');
+          title.className = 'title';
+          title.innerHTML = `
+            ${escapeHtml(d.name)}
+            ${active ? '<span class="badge">Selected</span>' : ''}
+            <span class="badge">Due: ${due}</span>
+            <span class="badge">Cards: ${totalCards}</span>
+          `;
+
+          const desc = document.createElement('div');
+          desc.className = 'desc';
+          desc.textContent = `Updated: ${fmtDateTime(d.updatedAt)} · Created: ${fmtDateTime(d.createdAt)}`;
+
+          left.appendChild(title);
+          left.appendChild(desc);
+
+          const right = document.createElement('div');
+          right.className = 'right';
+
+          const selectBtn = document.createElement('button');
+          selectBtn.className = 'btn small';
+          selectBtn.textContent = active ? '✓ Active' : 'Select';
+          selectBtn.onclick = async ()=>{
+            this.activeDeckId = d.id;
+            $('#deckSelect').value = d.id;
+            toast('Deck selected', { detail: d.name, ttl: 2200 });
+            await this.renderDecks();
+          };
+
+          const renameBtn = document.createElement('button');
+          renameBtn.className = 'btn small';
+          renameBtn.textContent = 'Rename';
+          renameBtn.onclick = ()=> this.openDeckDialog({ mode:'edit', deck: d });
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn small danger';
+          delBtn.textContent = 'Delete';
+          delBtn.onclick = ()=> this.confirm(
+            'Delete deck?',
+            `This will delete "${d.name}" and ALL its cards. This cannot be undone.`,
+            async ()=>{
+              await DB.deleteDeck(d.id);
+              toast('Deck deleted', { ttl: 2200 });
+              await this.loadDecks();
+              await this.renderDecks();
+            }
+          );
+
+          right.appendChild(selectBtn);
+          right.appendChild(renameBtn);
+          right.appendChild(delBtn);
+
+          item.appendChild(left);
+          item.appendChild(right);
+
+          list.appendChild(item);
+        }
+      },
+
+      openDeckDialog({ mode, deck=null }){
+        const dlg = $('#deckDlg');
+        const title = $('#deckDlgTitle');
+        const input = $('#deckName');
+        const save = $('#deckDlgSave');
+
+        title.textContent = mode === 'create' ? 'New deck' : 'Rename deck';
+        input.value = deck?.name || '';
+        input.focus();
+
+        save.onclick = async ()=>{
+          const name = (input.value || '').trim();
+          if (!name){
+            toast('Deck name is required.', { ttl: 2400 });
+            input.focus();
+            return;
+          }
+          if (mode === 'create'){
+            await DB.upsertDeck({ id: uid(), name, createdAt: now(), updatedAt: now() });
+            toast('Deck created', { detail: name, ttl: 2200 });
+          } else {
+            await DB.upsertDeck({ ...deck, name, updatedAt: now() });
+            toast('Deck renamed', { detail: name, ttl: 2200 });
+          }
+          dlg.close();
+          await this.loadDecks();
+          await this.route(true);
+        };
+
+        dlg.showModal();
+      },
+
+      /************
+       * Study view
+       ************/
+      async prepareStudyQueue(force=false){
+        if (!force && this.queue.length && this.current) return;
+        const dueCards = (await DB.getDueCards(this.activeDeckId, 80, now()))
+          .filter(c => !c.suspended);
+
+        // lightweight shuffle to reduce pattern
+        for (let i = dueCards.length - 1; i > 0; i--){
+          const j = Math.floor(Math.random() * (i + 1));
+          [dueCards[i], dueCards[j]] = [dueCards[j], dueCards[i]];
+        }
+
+        this.queue = dueCards;
+        this.current = this.queue.shift() || null;
+        this.flipped = false;
+      },
+
+      async renderStudy(soft=false){
+        const view = $('#view');
+        await this.prepareStudyQueue(!!soft);
+
+        const dueCount = await DB.countDue(this.activeDeckId);
+        const deckName = this.decks.find(d=>d.id===this.activeDeckId)?.name || '—';
+
+        if (!this.current){
+          view.innerHTML = `
+            <section class="card">
+              <div class="hd">
+                <div>
+                  <h2>Study</h2>
+                  <div class="meta">${escapeHtml(deckName)} · Due now: ${dueCount}</div>
+                </div>
+                <div class="row">
+                  <a class="btn small" href="#add">＋ Add card</a>
+                  <a class="btn small" href="#decks">Manage decks</a>
+                </div>
+              </div>
+              <div class="bd">
+                <div class="flash">
+                  <div class="muted" style="font-size:15px;line-height:1.5">
+                    You’re caught up. 🎉<br>
+                    <span class="muted2">If you want more practice, add cards or study another deck.</span>
+                  </div>
+                  <div class="divider"></div>
+                  <div class="row">
+                    <button class="btn primary" id="refreshStudy">Check again</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          `;
+          $('#refreshStudy').onclick = async ()=>{
+            await this.prepareStudyQueue(true);
+            await this.renderStudy(true);
+          };
+          return;
+        }
+
+        const c = ensureSrs(this.current);
+        const markedPinyin = pinyinToMarked(c.pinyin || '');
+        const sylls = splitPinyinSyllables(c.pinyin || '');
+
+        const showPinyin = !!this.settings.showPinyinOnFront;
+        const showMeaning = !!this.settings.showMeaningOnFront;
+
+        view.innerHTML = `
+          <div class="grid cols2">
+            <section class="flashcard">
+              <div class="topbar">
+                <div class="kpi">
+                  <div class="pill">Deck: <b>${escapeHtml(deckName)}</b></div>
+                  <div class="pill">Due now: <b>${dueCount}</b></div>
+                  <div class="pill">Today: <b>${this.stats.reviewedToday}/${this.settings.dailyGoal}</b></div>
+                </div>
+                <div class="row">
+                  <button class="btn small" id="speakBtn" title="Speak (A)">🔊 Speak<span class="kbd">A</span></button>
+                  <button class="btn small" id="editBtn">✏️ Edit</button>
+                  <button class="btn small" id="suspendBtn">${c.suspended ? '▶️ Unsuspend' : '⏸ Suspend'}</button>
+                </div>
+              </div>
+
+              <div class="content">
+                <div class="hanzi" id="hanziLine"></div>
+
+                <div class="pinyin" id="pinyinLine" style="${showPinyin ? '' : 'display:none'}"></div>
+
+                <div class="meaning" id="meaningLine" style="${(showMeaning && !this.flipped) ? '' : 'display:none'}"></div>
+
+                <div class="example" id="exampleLine" style="${this.flipped ? '' : 'display:none'}"></div>
+              </div>
+
+              <div class="actions" id="studyActions"></div>
+            </section>
+
+            <section class="card">
+              <div class="hd">
+                <div>
+                  <h2>Practice</h2>
+                  <div class="meta">Draw the character (local only)</div>
+                </div>
+                <div class="row">
+                  <button class="btn small" id="clearCanvas">🧽 Clear</button>
+                  <button class="btn small" id="toggleOverlay">👻 Overlay</button>
+                </div>
+              </div>
+              <div class="bd">
+                <div class="practice">
+                  <div class="hint">
+                    Tap/click a character above to copy it.
+                    <br>Tip: Use this panel for handwriting drills.
+                  </div>
+                  <div class="canvas-wrap">
+                    <canvas id="pad" width="1200" height="520" aria-label="Drawing practice canvas"></canvas>
+                    <div class="canvas-overlay" id="overlay"></div>
+                  </div>
+                  <div class="row">
+                    <span class="muted2">Data stays on-device (IndexedDB). Use Export in Settings for backups.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        // render hanzi (click per-character copy)
+        const hzLine = $('#hanziLine');
+        const chars = splitHanzi(c.front || '');
+        hzLine.innerHTML = '';
+        chars.forEach((ch, idx)=>{
+          const b = document.createElement('button');
+          b.className = 'hz' + (idx === 0 ? ' main' : '');
+          b.type = 'button';
+          b.title = 'Click to copy';
+          b.textContent = ch;
+          b.onclick = () => copyText(ch);
+          hzLine.appendChild(b);
+        });
+
+        // pinyin line
+        const pLine = $('#pinyinLine');
+        pLine.innerHTML = '';
+        if (markedPinyin){
+          if (this.settings.toneColors){
+            for (const s of sylls){
+              const span = document.createElement('span');
+              span.className = `syll tone${s.tone}`;
+              span.textContent = s.text;
+              pLine.appendChild(span);
+            }
+          } else {
+            const span = document.createElement('span');
+            span.className = 'syll';
+            span.textContent = markedPinyin;
+            pLine.appendChild(span);
+          }
+        }
+
+        // meaning / example
+        $('#meaningLine').textContent = c.meaning || '';
+        $('#exampleLine').textContent = c.example ? `Example: ${c.example}` : '';
+
+        // actions (flip or rate)
+        this.renderStudyActions();
+
+        // buttons
+        $('#speakBtn').onclick = ()=> TTS.speak(c.front || '');
+        $('#editBtn').onclick = ()=> location.hash = '#edit/' + c.id;
+
+        $('#suspendBtn').onclick = async ()=>{
+          c.suspended = !c.suspended;
+          await DB.upsertCard(c);
+          toast(c.suspended ? 'Card suspended' : 'Card unsuspended', { ttl: 2200 });
+          await this.prepareStudyQueue(true);
+          await this.renderStudy(true);
+        };
+
+        // practice canvas
+        this.setupCanvas(chars.join(''));
+        $('#overlay').textContent = chars[0] || '';
+
+        $('#clearCanvas').onclick = ()=> this.clearCanvas();
+        $('#toggleOverlay').onclick = ()=>{
+          this.settings.practiceOverlay = !this.settings.practiceOverlay;
+          DB.setMeta('settings', this.settings);
+          $('#overlay').style.display = this.settings.practiceOverlay ? 'grid' : 'none';
+        };
+        $('#overlay').style.display = this.settings.practiceOverlay ? 'grid' : 'none';
+
+        // optional autospeak
+        if (!this.flipped && TTS.enabled && TTS.autoSpeakFront){
+          TTS.speak(c.front || '');
+        }
+        if (this.flipped && TTS.enabled && TTS.autoSpeakBack){
+          TTS.speak(c.front || '');
+        }
+      },
+
+      renderStudyActions(){
+        const wrap = $('#studyActions');
+        wrap.innerHTML = '';
+
+        if (!this.flipped){
+          const flip = document.createElement('button');
+          flip.className = 'btn primary';
+          flip.innerHTML = `Show answer <span class="kbd">Space</span>`;
+          flip.onclick = ()=> this.onFlip();
+          wrap.appendChild(flip);
+
+          const info = document.createElement('div');
+          info.className = 'hint';
+          info.style.textAlign = 'center';
+          info.innerHTML = `Flip to rate (Again/Hard/Good/Easy).`;
+          wrap.appendChild(info);
+        } else {
+          const row = document.createElement('div');
+          row.className = 'rating';
+
+          const mk = (label, cls, key, rating) => {
+            const b = document.createElement('button');
+            b.className = 'btn ' + cls;
+            b.innerHTML = `${label} <span class="kbd">${key}</span>`;
+            b.onclick = ()=> this.onRate(rating);
+            return b;
+          };
+
+          row.appendChild(mk('Again', 'danger', '1', 0));
+          row.appendChild(mk('Hard', 'warn', '2', 1));
+          row.appendChild(mk('Good', '', '3', 2));
+          row.appendChild(mk('Easy', 'good', '4', 3));
+
+          wrap.appendChild(row);
+
+          // reveal content
+          $('#meaningLine').style.display = '';
+          $('#exampleLine').style.display = this.current?.example ? '' : 'none';
+          $('#pinyinLine').style.display = '';
+        }
+      },
+
+      onFlip(){
+        this.flipped = !this.flipped;
+        this.renderStudyActions();
+        if (this.flipped && TTS.enabled && TTS.autoSpeakBack){
+          TTS.speak(this.current?.front || '');
+        }
+      },
+
+      async onRate(rating){
+        if (!this.current) return;
+        const c = ensureSrs(this.current);
+        schedule(c, rating);
+        await DB.upsertCard(c);
+
+        // update stats
+        const dk = new Date().toISOString().slice(0,10);
+        if (this.stats.dateKey !== dk){
+          this.stats.dateKey = dk;
+          this.stats.reviewedToday = 0;
+        }
+        this.stats.reviewedToday += 1;
+        this.stats.lastReviewAt = now();
+        await DB.setMeta('stats', this.stats);
+
+        // next card
+        this.current = this.queue.shift() || null;
+        this.flipped = false;
+
+        await this.renderStudy(true);
+      },
+
+      /************
+       * Add/Edit view
+       ************/
+      async renderAdd(editId=null){
+        const view = $('#view');
+        this.editingCardId = editId;
+
+        const deckName = this.decks.find(d=>d.id===this.activeDeckId)?.name || '—';
+        let card = null;
+        if (editId){
+          card = await DB.getCard(editId);
+          if (!card){
+            toast('Card not found.', { ttl: 2400 });
+            location.hash = '#search';
+            return;
+          }
+          // if editing card from another deck, switch deck
+          if (card.deckId && card.deckId !== this.activeDeckId){
+            this.activeDeckId = card.deckId;
+            $('#deckSelect').value = card.deckId;
+            await this.loadDecks();
+          }
+        }
+
+        view.innerHTML = `
+          <div class="grid cols2">
+            <section class="card">
+              <div class="hd">
+                <div>
+                  <h2>${editId ? 'Edit card' : 'Add card'}</h2>
+                  <div class="meta">Deck: ${escapeHtml(deckName)}</div>
+                </div>
+                <div class="row">
+                  <button class="btn small" id="bulkBtn">📥 Bulk add</button>
+                  ${editId ? '<button class="btn small danger" id="deleteCardBtn">🗑 Delete</button>' : ''}
+                </div>
+              </div>
+              <div class="bd">
+                <form class="form" id="cardForm">
+                  <div class="field">
+                    <label for="front">Hanzi (front)</label>
+                    <input id="front" required placeholder="对 / 你好 / 谢谢" />
+                  </div>
+
+                  <div class="field">
+                    <label for="pinyin">Pinyin (numbers OK)</label>
+                    <input id="pinyin" placeholder="dui4  /  ni3 hao3" />
+                    <div class="hint">Auto converts: <b>ni3 hao3</b> → <b>nǐ hǎo</b>. Use <b>v</b> or <b>u:</b> for ü (e.g., lv4).</div>
+                  </div>
+
+                  <div class="field">
+                    <label for="meaning">Meaning (back)</label>
+                    <textarea id="meaning" placeholder="correct; right; towards..."></textarea>
+                  </div>
+
+                  <div class="field">
+                    <label for="example">Example sentence (optional)</label>
+                    <textarea id="example" placeholder="你说得对。"></textarea>
+                  </div>
+
+                  <div class="field">
+                    <label for="tags">Tags (optional)</label>
+                    <input id="tags" placeholder="HSK1, grammar, measure-word" />
+                  </div>
+
+                  <div class="field">
+                    <label for="notes">Notes (optional)</label>
+                    <textarea id="notes" placeholder="Anything you want to remember…"></textarea>
+                  </div>
+
+                  <div class="row between">
+                    <div class="hint">
+                      Tip: Keep meaning short. Add nuance in Notes.
+                    </div>
+                    <div class="row">
+                      <button type="button" class="btn" id="previewBtn">👁 Preview</button>
+                      <button type="submit" class="btn primary">${editId ? 'Save changes' : 'Add card'}</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="hd">
+                <h2>Preview</h2>
+                <div class="meta">What it will look like</div>
+              </div>
+              <div class="bd">
+                <div class="flash">
+                  <div class="hanzi" id="prevHanzi"></div>
+                  <div class="pinyin" id="prevPinyin"></div>
+                  <div class="meaning" id="prevMeaning"></div>
+                  <div class="example" id="prevExample"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        // fill form
+        $('#front').value = card?.front || '';
+        $('#pinyin').value = card?.pinyin || '';
+        $('#meaning').value = card?.meaning || '';
+        $('#example').value = card?.example || '';
+        $('#tags').value = card?.tags || '';
+        $('#notes').value = card?.notes || '';
+
+        const renderPreview = ()=>{
+          const front = ($('#front').value || '').trim();
+          const pin = ($('#pinyin').value || '').trim();
+          const meaning = ($('#meaning').value || '').trim();
+          const ex = ($('#example').value || '').trim();
+
+          const hz = $('#prevHanzi');
+          hz.innerHTML = '';
+          splitHanzi(front).forEach((ch, idx)=>{
+            const s = document.createElement('span');
+            s.className = 'hz' + (idx===0 ? ' main':'');
+            s.textContent = ch;
+            hz.appendChild(s);
+          });
+
+          const py = $('#prevPinyin');
+          py.innerHTML = '';
+          const syls = splitPinyinSyllables(pin);
+          if (this.settings.toneColors){
+            syls.forEach(s=>{
+              const span = document.createElement('span');
+              span.className = `syll tone${s.tone}`;
+              span.textContent = s.text;
+              py.appendChild(span);
+            });
+          } else {
+            const span = document.createElement('span');
+            span.className = 'syll';
+            span.textContent = pinyinToMarked(pin);
+            py.appendChild(span);
+          }
+
+          $('#prevMeaning').textContent = meaning;
+          $('#prevExample').textContent = ex ? `Example: ${ex}` : '';
+        };
+
+        renderPreview();
+        $('#previewBtn').onclick = renderPreview;
+        ['front','pinyin','meaning','example'].forEach(id=>{
+          $('#'+id).addEventListener('input', () => renderPreview());
+        });
+
+        $('#bulkBtn').onclick = ()=> this.openBulkAdd();
+
+        if (editId){
+          $('#deleteCardBtn').onclick = ()=> this.confirm(
+            'Delete card?',
+            `This card will be permanently deleted.`,
+            async ()=>{
+              await DB.deleteCard(editId);
+              toast('Card deleted', { ttl: 2200 });
+              location.hash = '#search';
+            }
+          );
+        }
+
+        $('#cardForm').onsubmit = async (e)=>{
+          e.preventDefault();
+
+          const front = ($('#front').value || '').trim();
+          if (!front){
+            toast('Hanzi is required.', { ttl: 2400 });
+            return;
+          }
+
+          const cardData = ensureSrs({
+            id: editId || uid(),
+            deckId: this.activeDeckId,
+            front,
+            pinyin: ($('#pinyin').value || '').trim(),
+            meaning: ($('#meaning').value || '').trim(),
+            example: ($('#example').value || '').trim(),
+            tags: ($('#tags').value || '').trim(),
+            notes: ($('#notes').value || '').trim(),
+            createdAt: card?.createdAt || now(),
+            updatedAt: now(),
+            dueAt: card?.dueAt ?? now()
+          });
+
+          await DB.upsertCard(cardData);
+          toast(editId ? 'Card updated' : 'Card added', { ttl: 2200 });
+
+          if (!editId){
+            // reset minimal fields for faster entry
+            $('#front').value = '';
+            $('#pinyin').value = '';
+            $('#meaning').value = '';
+            $('#example').value = '';
+            $('#tags').value = '';
+            $('#notes').value = '';
+            renderPreview();
+            $('#front').focus();
+          } else {
+            location.hash = '#study';
+          }
+        };
+      },
+
+      openBulkAdd(){
+        const dlg = $('#bulkDlg');
+        $('#bulkText').value = '';
+        dlg.showModal();
+
+        $('#bulkImport').onclick = async ()=>{
+          const raw = ($('#bulkText').value || '').trim();
+          if (!raw){
+            toast('Nothing to import.', { ttl: 2200 });
+            return;
+          }
+          const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+
+          let added = 0;
+          for (const line of lines){
+            // support TAB or " | "
+            let parts = line.split('\t');
+            if (parts.length < 3) parts = line.split('|').map(s=>s.trim());
+            if (parts.length < 2) continue;
+
+            const front = (parts[0] || '').trim();
+            const pinyin = (parts[1] || '').trim();
+            const meaning = (parts.slice(2).join(' ') || '').trim();
+
+            if (!front) continue;
+
+            await DB.upsertCard(ensureSrs({
+              id: uid(),
+              deckId: this.activeDeckId,
+              front,
+              pinyin,
+              meaning,
+              example: '',
+              tags: '',
+              notes: '',
+              createdAt: now(),
+              updatedAt: now(),
+              dueAt: now()
+            }));
+            added++;
+          }
+
+          dlg.close();
+          toast('Bulk add complete', { detail: `${added} card(s) added`, ttl: 3000 });
+          if ((location.hash || '#').includes('study')){
+            await this.refreshIfStudy();
+          }
+        };
+      },
+
+      /************
+       * Search view
+       ************/
+      async renderSearch(){
+        const view = $('#view');
+        const deckName = this.decks.find(d=>d.id===this.activeDeckId)?.name || '—';
+
+        view.innerHTML = `
+          <section class="card">
+            <div class="hd">
+              <div>
+                <h2>Search</h2>
+                <div class="meta">Deck: ${escapeHtml(deckName)} · Search Hanzi / Pinyin / Meaning / Tags</div>
+              </div>
+              <div class="row">
+                <a class="btn small" href="#add">＋ Add</a>
+              </div>
+            </div>
+            <div class="bd">
+              <div class="form">
+                <div class="field">
+                  <label for="q">Query</label>
+                  <input id="q" placeholder="e.g., 对 / dui4 / correct / HSK1" />
+                </div>
+                <div class="row between">
+                  <div class="row">
+                    <button class="btn primary" id="goSearch">Search</button>
+                    <button class="btn" id="clearSearch">Clear</button>
+                  </div>
+                  <div class="hint">Tip: Click a Hanzi to copy it (in Study).</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="list" id="results"></div>
+            </div>
+          </section>
+        `;
+
+        const run = async ()=>{
+          const q = ($('#q').value || '').trim().toLowerCase();
+          const cards = await DB.getCardsByDeck(this.activeDeckId);
+          const filtered = !q ? cards : cards.filter(c=>{
+            const hay = [
+              c.front, c.pinyin, pinyinToMarked(c.pinyin||''), c.meaning, c.example, c.tags, c.notes
+            ].join(' ').toLowerCase();
+            return hay.includes(q);
+          }).sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0));
+
+          const res = $('#results');
+          res.innerHTML = '';
+          if (!filtered.length){
+            res.innerHTML = `<div class="muted">No matches.</div>`;
+            return;
+          }
+
+          for (const c of filtered.slice(0, 250)){
+            const item = document.createElement('div');
+            item.className = 'item';
+
+            const left = document.createElement('div');
+            left.className = 'left';
+
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.innerHTML = `
+              ${escapeHtml(c.front || '—')}
+              <span class="badge">Due: ${fmtDateTime(c.dueAt)}</span>
+              ${c.suspended ? '<span class="badge">Suspended</span>' : ''}
+            `;
+
+            const desc = document.createElement('div');
+            desc.className = 'desc';
+            const pin = pinyinToMarked(c.pinyin||'');
+            desc.textContent = `${pin ? (pin + ' · ') : ''}${c.meaning || ''}`;
+
+            left.appendChild(title);
+            left.appendChild(desc);
+
+            const right = document.createElement('div');
+            right.className = 'right';
+
+            const edit = document.createElement('a');
+            edit.className = 'btn small';
+            edit.href = '#edit/' + c.id;
+            edit.textContent = 'Edit';
+
+            const study = document.createElement('a');
+            study.className = 'btn small primary';
+            study.href = '#study';
+            study.textContent = 'Study';
+
+            right.appendChild(edit);
+            right.appendChild(study);
+
+            item.appendChild(left);
+            item.appendChild(right);
+
+            res.appendChild(item);
+          }
+        };
+
+        $('#goSearch').onclick = run;
+        $('#clearSearch').onclick = ()=>{ $('#q').value=''; run(); };
+        $('#q').addEventListener('keydown', (e)=>{ if (e.key==='Enter') run(); });
+
+        run();
+      },
+
+      /************
+       * Settings view
+       ************/
+      async renderSettings(){
+        const view = $('#view');
+
+        const due = await DB.countDue(this.activeDeckId);
+        const totalCards = (await DB.getCardsByDeck(this.activeDeckId)).length;
+
+        view.innerHTML = `
+          <div class="grid cols2">
+            <section class="card">
+              <div class="hd">
+                <h2>Settings</h2>
+                <div class="meta">Local-only app (offline-first)</div>
+              </div>
+              <div class="bd">
+                <div class="form">
+                  <div class="field">
+                    <label for="goal">Daily goal</label>
+                    <input id="goal" type="number" min="1" max="999" value="${this.settings.dailyGoal}" />
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <span>Show pinyin on front</span>
+                      <input id="showPinyinOnFront" type="checkbox" ${this.settings.showPinyinOnFront ? 'checked':''} />
+                    </label>
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <span>Use tone colors</span>
+                      <input id="toneColors" type="checkbox" ${this.settings.toneColors ? 'checked':''} />
+                    </label>
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <span>TTS enabled</span>
+                      <input id="ttsEnabled" type="checkbox" ${this.settings.ttsEnabled ? 'checked':''} />
+                    </label>
+                    <div class="hint">Uses your browser voices (SpeechSynthesis). Best on Chrome/Edge.</div>
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <span>Auto-speak on front</span>
+                      <input id="autoSpeakFront" type="checkbox" ${this.settings.autoSpeakFront ? 'checked':''} />
+                    </label>
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <span>Auto-speak after flip</span>
+                      <input id="autoSpeakBack" type="checkbox" ${this.settings.autoSpeakBack ? 'checked':''} />
+                    </label>
+                  </div>
+
+                  <div class="divider"></div>
+
+                  <div class="row">
+                    <button class="btn primary" id="saveSettings">Save</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="hd">
+                <h2>Backup & Data</h2>
+                <div class="meta">Export/import your decks</div>
+              </div>
+              <div class="bd">
+                <div class="kpi">
+                  <div class="pill">Selected deck cards: <b>${totalCards}</b></div>
+                  <div class="pill">Due now: <b>${due}</b></div>
+                  <div class="pill">Reviewed today: <b>${this.stats.reviewedToday}</b></div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="row">
+                  <button class="btn primary" id="exportBtn">⬇️ Export backup</button>
+                  <label class="btn" for="importFile">⬆️ Import backup</label>
+                  <input id="importFile" type="file" accept="application/json" class="sr-only" />
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="row">
+                  <button class="btn danger" id="wipeBtn">🧨 Wipe ALL data</button>
+                </div>
+
+                <div class="hint" style="margin-top:10px">
+                  Export creates a JSON file with all decks/cards. Import merges by id (upserts).
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+
+        $('#saveSettings').onclick = async ()=>{
+          const s = this.settings;
+          s.dailyGoal = clamp(parseInt($('#goal').value || '30', 10), 1, 999);
+          s.showPinyinOnFront = $('#showPinyinOnFront').checked;
+          s.toneColors = $('#toneColors').checked;
+          s.ttsEnabled = $('#ttsEnabled').checked;
+          s.autoSpeakFront = $('#autoSpeakFront').checked;
+          s.autoSpeakBack = $('#autoSpeakBack').checked;
+
+          await DB.setMeta('settings', s);
+          await this.loadMeta();
+
+          toast('Settings saved', { ttl: 2200 });
+        };
+
+        $('#exportBtn').onclick = async ()=>{
+          const data = await DB.exportAll();
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `hanzicards-backup-${new Date().toISOString().slice(0,10)}.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=> URL.revokeObjectURL(a.href), 2500);
+          toast('Exported backup', { ttl: 2500 });
+        };
+
+        $('#importFile').onchange = async (e)=>{
+          const f = e.target.files?.[0];
+          if (!f) return;
+          try{
+            const txt = await f.text();
+            const data = JSON.parse(txt);
+            const res = await DB.importAll(data, 'merge');
+            toast('Import complete', { detail: `Decks: ${res.decks} · Cards: ${res.cards}`, ttl: 4200 });
+            await this.loadMeta();
+            await this.loadDecks();
+            await this.route(true);
+          }catch(err){
+            console.error(err);
+            toast('Import failed', { detail: 'Invalid JSON or corrupted file.', ttl: 4500 });
+          }finally{
+            e.target.value = '';
+          }
+        };
+
+        $('#wipeBtn').onclick = ()=> this.confirm(
+          'Wipe ALL data?',
+          'This deletes every deck, card, and setting stored on this device. This cannot be undone.',
+          async ()=>{
+            await this.wipeAllData();
+            toast('Data wiped', { ttl: 2500 });
+            location.reload();
+          }
+        );
+      },
+
+      async wipeAllData(){
+        if (this.swReg){
+          try{
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }catch{}
+        }
+        await new Promise((resolve)=>{
+          const req = indexedDB.deleteDatabase(DB.name);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => resolve(true);
+          req.onblocked = () => resolve(true);
+        });
+      },
+
+      confirm(title, msg, onYes){
+        const dlg = $('#confirmDlg');
+        $('#confirmTitle').textContent = title;
+        $('#confirmMsg').textContent = msg;
+
+        $('#confirmYes').onclick = async ()=>{
+          dlg.close();
+          await onYes?.();
+        };
+
+        dlg.showModal();
+      },
+
+      /********************
+       * Practice canvas
+       ********************/
+      pad: null,
+      ctx: null,
+      drawing: false,
+      lastPt: null,
+
+      setupCanvas(overlayChar){
+        this.pad = $('#pad');
+        this.ctx = this.pad.getContext('2d', { alpha: true });
+
+        // crisp strokes on high DPI
+        const rect = this.pad.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.floor(rect.width * dpr);
+        const h = Math.floor(rect.height * dpr);
+        if (this.pad.width !== w || this.pad.height !== h){
+          this.pad.width = w;
+          this.pad.height = h;
+        }
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.lineWidth = 10 * dpr;
+        this.ctx.strokeStyle = 'rgba(241,245,249,.92)';
+
+        $('#overlay').textContent = overlayChar || '';
+        $('#overlay').style.display = this.settings.practiceOverlay ? 'grid' : 'none';
+
+        const getPos = (ev)=>{
+          const r = this.pad.getBoundingClientRect();
+          const x = (ev.clientX - r.left) * (this.pad.width / r.width);
+          const y = (ev.clientY - r.top) * (this.pad.height / r.height);
+          return {x,y};
+        };
+
+        const down = (ev)=>{
+          this.drawing = true;
+          this.lastPt = getPos(ev);
+          this.ctx.beginPath();
+          this.ctx.moveTo(this.lastPt.x, this.lastPt.y);
+        };
+
+        const move = (ev)=>{
+          if (!this.drawing) return;
+          const p = getPos(ev);
+          // simple smoothing
+          const mid = { x: (this.lastPt.x + p.x)/2, y:(this.lastPt.y + p.y)/2 };
+          this.ctx.quadraticCurveTo(this.lastPt.x, this.lastPt.y, mid.x, mid.y);
+          this.ctx.stroke();
+          this.lastPt = p;
+        };
+
+        const up = ()=>{
+          this.drawing = false;
+          this.lastPt = null;
+        };
+
+        // pointer events
+        this.pad.onpointerdown = (ev)=>{ this.pad.setPointerCapture(ev.pointerId); down(ev); };
+        this.pad.onpointermove = move;
+        this.pad.onpointerup = up;
+        this.pad.onpointercancel = up;
+        this.pad.onpointerleave = up;
+      },
+
+      clearCanvas(){
+        if (!this.ctx || !this.pad) return;
+        this.ctx.clearRect(0,0,this.pad.width,this.pad.height);
+      },
+    };
+
+    function escapeHtml(s){
+      return (s ?? '').toString()
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    // boot
+    (async ()=>{
+      try{
+        // voices load async in some browsers
+        if ('speechSynthesis' in window){
+          window.speechSynthesis.onvoiceschanged = ()=>{};
+        }
+        await App.init();
+      }catch(err){
+        console.error(err);
+        toast('App failed to start', { detail: String(err?.message || err), ttl: 0 });
+      }
+    })();
   </script>
 </body>
 </html>
