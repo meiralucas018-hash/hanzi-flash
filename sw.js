@@ -1,9 +1,9 @@
 const CACHE = 'hanzi-flash-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon.svg'
+  '/hanzi-flash/',
+  '/hanzi-flash/index.html',
+  '/hanzi-flash/manifest.json',
+  '/hanzi-flash/icon.svg'
 ];
 
 self.addEventListener('install', e => {
