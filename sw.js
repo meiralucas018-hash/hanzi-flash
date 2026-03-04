@@ -1,4 +1,4 @@
-const CACHE = 'hanzi-flash-v1';
+const CACHE = 'hanzi-flash-v2';
 const ASSETS = [
   '/hanzi-flash/',
   '/hanzi-flash/index.html',
