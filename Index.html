@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>汉字 Flash</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="汉字 Flash" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #0a0a0c;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', 'PingFang SC', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    .wrapper {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: clamp(18px, 4vw, 40px) 16px clamp(32px, 6vw, 60px);
+      background-attachment: fixed;
+      background-image:
+        radial-gradient(1200px 700px at 30% 10%, rgba(96,165,250,.10), transparent 60%),
+        radial-gradient(900px 600px at 80% 20%, rgba(192,132,252,.08), transparent 55%),
+        linear-gradient(#0a0a0c, #0a0a0c);
+    }
+
+    .card-box {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 30%), #16161a;
+      max-width: 760px;
+      width: 100%;
+      border-radius: 22px;
+      padding: clamp(20px, 4.2vw, 42px);
+      box-shadow: 0 25px 55px -14px rgba(0,0,0,.75);
+      border: 1px solid rgba(255,255,255,.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-box::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 24px;
+      background:
+        radial-gradient(450px 220px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+        radial-gradient(420px 240px at 85% 10%, rgba(192,132,252,.14), transparent 60%);
+      pointer-events: none;
+      opacity: .55;
+      filter: blur(10px);
+    }
+
+    .card-box > * { position: relative; }
+
+    /* ── HOME ── */
+    .home-title {
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 900;
+      color: rgba(96,165,250,.92);
+      text-align: center;
+      margin-bottom: 4px;
+      text-shadow: 0 0 24px rgba(96,165,250,.3), 0 18px 45px rgba(0,0,0,.55);
+      letter-spacing: -1px;
+    }
+
+    .home-subtitle {
+      color: #94a3b8;
+      text-align: center;
+      font-size: 0.95em;
+      margin-bottom: 36px;
+      letter-spacing: .5px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 90px;
+      flex: 1;
+    }
+
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: rgba(96,165,250,.9);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7em;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-top: 4px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px 24px;
+      border-radius: 14px;
+      border: none;
+      font-family: inherit;
+      font-size: 1em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s ease;
+      letter-spacing: .3px;
+    }
+
+    .btn-primary {
+      background: rgba(96,165,250,.15);
+      border: 1px solid rgba(96,165,250,.35);
+      color: #60a5fa;
+    }
+    .btn-primary:hover { background: rgba(96,165,250,.25); transform: translateY(-1px); }
+
+    .btn-show {
+      background: rgba(192,132,252,.12);
+      border: 1px solid rgba(192,132,252,.3);
+      color: #c084fc;
+      margin-top: 20px;
+    }
+    .btn-show:hover { background: rgba(192,132,252,.22); transform: translateY(-1px); }
+
+    /* ── PROGRESS ── */
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 760px;
+      height: 3px;
+      background: rgba(255,255,255,.05);
+      border-radius: 99px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #60a5fa, #c084fc);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    /* ── FRONT ── */
+    .char-display {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .hanzi {
+      font-size: clamp(3.1rem, 7.5vw, 4.6rem);
+      font-weight: 900;
+      color: rgba(96,165,250,.92);
+      text-shadow: 0 0 18px rgba(96,165,250,.22), 0 18px 45px rgba(0,0,0,.55);
+      line-height: 1.05;
+    }
+
+    .pinyin {
+      margin-top: 6px;
+      color: #94a3b8;
+      font-size: 1.05rem;
+      letter-spacing: .4px;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: min(420px, 92vw);
+      height: min(420px, 92vw);
+      margin: 0 auto;
+    }
+
+    .canvas-grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px);
+      background-size: 50% 50%;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,0.15);
+      box-sizing: border-box;
+    }
+
+    .canvas-grid::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(135deg, transparent 49%, rgba(255,255,255,0.05) 50%, transparent 51%),
+        linear-gradient(45deg,  transparent 49%, rgba(255,255,255,0.05) 50%, transparent 51%);
+      border-radius: 14px;
+    }
+
+    #drawingCanvas {
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.25);
+      border-radius: 14px;
+      box-shadow: inset 0 3px 15px rgba(0,0,0,0.6);
+      cursor: crosshair;
+      touch-action: none;
+      display: block;
+    }
+
+    .btn-row {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .draw-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #f1f5f9;
+      padding: 8px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .9em;
+      transition: all .2s ease;
+    }
+
+    .draw-btn:hover {
+      background: rgba(96,165,250,0.15);
+      border-color: rgba(96,165,250,0.4);
+    }
+
+    /* ── RATING ── */
+    .rating-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .rating-btn {
+      padding: 13px 6px;
+      border-radius: 12px;
+      border: 1px solid;
+      font-family: inherit;
+      font-size: 0.85em;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s ease;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .rating-btn .ivl {
+      display: block;
+      font-size: 0.72em;
+      font-weight: 400;
+      opacity: 0.65;
+      margin-top: 2px;
+    }
+
+    .btn-again { background: rgba(239,68,68,.10);  border-color: rgba(239,68,68,.3);  color: #f87171; }
+    .btn-hard  { background: rgba(251,146,60,.10); border-color: rgba(251,146,60,.3); color: #fb923c; }
+    .btn-good  { background: rgba(96,165,250,.10); border-color: rgba(96,165,250,.3); color: #60a5fa; }
+    .btn-easy  { background: rgba(52,211,153,.10); border-color: rgba(52,211,153,.3); color: #34d399; }
+
+    .btn-again:hover { background: rgba(239,68,68,.2);  transform: translateY(-1px); }
+    .btn-hard:hover  { background: rgba(251,146,60,.2); transform: translateY(-1px); }
+    .btn-good:hover  { background: rgba(96,165,250,.2); transform: translateY(-1px); }
+    .btn-easy:hover  { background: rgba(52,211,153,.2); transform: translateY(-1px); }
+
+    /* ── MEANING MAP ── */
+    .meaning-map .mm-header { text-align: center; margin-bottom: clamp(16px,3vw,24px); }
+
+    .meaning-map .char-main {
+      font-size: clamp(3.2rem, 8vw, 4.8rem);
+      font-weight: 900;
+      color: rgba(96,165,250,.88);
+      text-shadow: 0 0 18px rgba(96,165,250,.22), 0 18px 45px rgba(0,0,0,.55);
+      cursor: pointer;
+      display: inline-block;
+      transition: transform .2s, color .2s;
+    }
+    .meaning-map .char-main:hover { transform: scale(1.05); color: #fff; }
+
+    .meaning-map .subhead { color: #94a3b8; font-size: 0.9em; margin-top: 6px; letter-spacing: .4px; }
+
+    .meaning-map .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
+      margin: 0 0 clamp(18px,3vw,28px) 0;
+    }
+
+    .meaning-map .meaning-item {
+      position: relative;
+      margin-bottom: clamp(20px,3.5vw,36px);
+      padding: 0 0 0 18px;
+      border-left: 3px solid rgba(255,255,255,.07);
+    }
+
+    .meaning-map .label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78em;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      color: #c084fc;
+      margin: 0 0 12px 0;
+    }
+
+    .meaning-map .label::before {
+      content: "";
+      width: 10px; height: 10px;
+      border-radius: 99px;
+      background: rgba(192,132,252,.8);
+      box-shadow: 0 0 0 4px rgba(192,132,252,.15);
+      flex-shrink: 0;
+    }
+
+    .meaning-map .sentence-wrap {
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color .18s, transform .18s, background .18s;
+    }
+
+    .meaning-map .sentence-wrap:hover {
+      border-color: rgba(96,165,250,.35);
+      background: rgba(255,255,255,.025);
+      transform: translateY(-1px);
+    }
+
+    .meaning-map .sentence-box {
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      line-height: 1.8;
+      color: #f1f5f9;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .meaning-map .word {
+      position: relative;
+      display: inline-block;
+      border-bottom: 5px dashed #3f444d;
+      margin-bottom: 8px;
+      padding: 0 3px 5px 3px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .meaning-map .word:hover { border-bottom-color: #c084fc; }
+
+    .meaning-map .char {
+      position: relative;
+      display: inline;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: color .1s, background .12s;
+    }
+    .meaning-map .char:hover { color: #60a5fa; background: rgba(96,165,250,.14); }
+
+    .meaning-map .char::after,
+    .meaning-map .word::after {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 0.46em;
+      font-weight: 650;
+      white-space: nowrap;
+      visibility: hidden;
+      opacity: 0;
+      z-index: 99999;
+      pointer-events: none;
+      transition: opacity .12s, transform .12s;
+      max-width: min(78vw, 520px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meaning-map .char::after {
+      content: attr(data-m);
+      bottom: 100%;
+      margin-bottom: 18px;
+      background: #2d2d35;
+      color: #60a5fa;
+      border: 1px solid rgba(96,165,250,.75);
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+
+    .meaning-map .word::after {
+      content: attr(data-m);
+      bottom: 100%;
+      margin-bottom: 18px;
+      background: rgba(192,132,252,.95);
+      color: #000;
+      border: 1px solid rgba(192,132,252,.35);
+      box-shadow: 0 12px 24px rgba(0,0,0,.28);
+    }
+
+    .meaning-map .char:hover::after,
+    .meaning-map .word:hover::after {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(-16px);
+    }
+
+    .meaning-map .word.suppress-word-tooltip::after {
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    .meaning-map .pinyin-line {
+      color: rgba(96,165,250,.95);
+      font-size: 1em;
+      margin-top: 10px;
+      line-height: 1.55;
+    }
+
+    .meaning-map .py { display: inline-block; white-space: nowrap; }
+
+    .meaning-map .translation-line {
+      color: #94a3b8;
+      font-style: italic;
+      font-size: 0.95em;
+      margin-top: 2px;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(18px);
+      background: rgba(22,22,26,.92);
+      border: 1px solid rgba(255,255,255,.10);
+      color: #f1f5f9;
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      font-size: .95em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s, transform .18s;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── DONE ── */
+    .done-emoji { font-size: 4rem; text-align: center; margin-bottom: 16px; }
+    .done-title { font-size: 1.8rem; font-weight: 800; color: rgba(96,165,250,.9); text-align: center; margin-bottom: 8px; }
+    .done-sub   { color: #94a3b8; text-align: center; font-size: 0.95em; margin-bottom: 28px; line-height: 1.6; }
+
+    @media (max-width: 420px) {
+      .rating-btn { font-size: 0.78em; padding: 11px 4px; }
+      .meaning-map .char::after, .meaning-map .word::after { max-width: min(88vw,420px); font-size: .50em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <div id="screen-home" class="screen active">
+    <div class="wrapper">
+      <div class="card-box" style="max-width:480px;">
+        <div class="home-title">汉字</div>
+        <div class="home-subtitle">Spaced Repetition Flashcards</div>
+        <div class="stats-row">
+          <div class="stat-pill">
+            <div class="stat-num" id="stat-due">0</div>
+            <div class="stat-label">Due Today</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">Total Cards</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-num" id="stat-learned">0</div>
+            <div class="stat-label">Learned</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-start">Start Review →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ FRONT ══════════════ -->
+  <div id="screen-front" class="screen">
+    <div class="wrapper">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="card-box">
+        <div class="char-display">
+          <div class="hanzi" id="front-hanzi"></div>
+          <div class="pinyin" id="front-pinyin"></div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="drawingCanvas" width="420" height="420"></canvas>
+          <div class="canvas-grid"></div>
+        </div>
+        <div class="btn-row">
+          <button id="undoDrawBtn" class="draw-btn"
+            style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.25);">Undo</button>
+          <button id="clearDrawBtn" class="draw-btn"
+            style="background:rgba(255,60,60,0.1);border-color:rgba(255,60,60,0.2);">Clear</button>
+        </div>
+        <button class="btn btn-show" id="btn-show-answer">Show Answer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ BACK ══════════════ -->
+  <div id="screen-back" class="screen">
+    <div class="wrapper">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill-back" style="width:0%"></div>
+      </div>
+      <div class="card-box">
+        <div class="meaning-map" id="meaning-map-content"></div>
+        <div class="rating-row">
+          <button class="rating-btn btn-again" data-rating="0">Again<span class="ivl" id="ivl-again"></span></button>
+          <button class="rating-btn btn-hard"  data-rating="1">Hard<span  class="ivl" id="ivl-hard"></span></button>
+          <button class="rating-btn btn-good"  data-rating="2">Good<span  class="ivl" id="ivl-good"></span></button>
+          <button class="rating-btn btn-easy"  data-rating="3">Easy<span  class="ivl" id="ivl-easy"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ DONE ══════════════ -->
+  <div id="screen-done" class="screen">
+    <div class="wrapper">
+      <div class="card-box" style="max-width:480px;">
+        <div class="done-emoji">🎉</div>
+        <div class="done-title">All done!</div>
+        <div class="done-sub">No more cards due today.<br>Come back tomorrow!</div>
+        <button class="btn btn-primary" id="btn-home">← Back to Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ════════════════════════════════════════════════════════════════
+  //  CARD DATA
+  //  To add a new card: copy one entry below and fill in your data.
+  //  The backHTML supports the full char/word tooltip system.
+  // ════════════════════════════════════════════════════════════════
+  const CARDS = [
+
+    {
+      id: 'dui',
+      hanzi: '对',
+      pinyin: 'duì',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">对</div>
+          <div class="subhead">duì • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="meaning-item">
+          <span class="label">1. Correct / Right</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="这个答案是对的。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: zhège (this)"><span class="char" data-m="zhè (this)">这</span><span class="char" data-m="ge (item)">个</span></span>
+              <span class="word" data-m="WORD: dá'àn (answer)"><span class="char" data-m="dá (reply)">答</span><span class="char" data-m="àn (record)">案</span></span>
+              <span class="char" data-m="shì (is)">是</span><span class="char" data-m="duì (correct)">对</span><span class="char" data-m="de (particle)">的</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhège</span> <span class="py">dá'àn</span> <span class="py">shì</span> <span class="py">duì</span> <span class="py">de.</span></div>
+          <div class="translation-line">This answer is correct.</div>
+        </div>
+
+        <div class="meaning-item">
+          <span class="label">2. Verb: To face / treat / reply</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="他对我笑了笑。">
+            <div class="sentence-box">
+              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="duì (faced)">对</span><span class="char" data-m="wǒ (me)">我</span>
+              <span class="word" data-m="REDUPLICATION: xiàolexiào (smiled)"><span class="char" data-m="xiào (smile)">笑</span><span class="char" data-m="le (past)">了</span><span class="char" data-m="xiào (smile)">笑</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">wǒ</span> <span class="py">xiàole</span> <span class="py">xiào.</span></div>
+          <div class="translation-line">He smiled at me.</div>
+        </div>
+
+        <div class="meaning-item">
+          <span class="label">3. Preposition: Regarding / toward</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="他对音乐很感兴趣。">
+            <div class="sentence-box">
+              <span class="char" data-m="tā (he)">他</span><span class="char" data-m="duì (toward)">对</span>
+              <span class="word" data-m="WORD: yīnyuè (music)"><span class="char" data-m="yīn (sound)">音</span><span class="char" data-m="yuè (music)">乐</span></span>
+              <span class="char" data-m="hěn (very)">很</span>
+              <span class="word" data-m="PHRASE: gǎn xìngqù (interested)"><span class="char" data-m="gǎn (feel)">感</span><span class="char" data-m="xìng (nature)">兴</span><span class="char" data-m="qù (interest)">趣</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Tā</span> <span class="py">duì</span> <span class="py">yīnyuè</span> <span class="py">hěn</span> <span class="py">gǎn</span> <span class="py">xìngqù.</span></div>
+          <div class="translation-line">He is very interested in music.</div>
+        </div>
+
+        <div class="meaning-item">
+          <span class="label">4. Classifier: For Pairs</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="那是一对夫妻。">
+            <div class="sentence-box">
+              <span class="char" data-m="nà (that)">那</span><span class="char" data-m="shì (is)">是</span>
+              <span class="char" data-m="yī (one)">一</span><span class="char" data-m="duì (pair)">对</span>
+              <span class="word" data-m="WORD: fūqī (couple)"><span class="char" data-m="fū (husband)">夫</span><span class="char" data-m="qī (wife)">妻</span></span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nà</span> <span class="py">shì</span> <span class="py">yī</span> <span class="py">duì</span> <span class="py">fūqī.</span></div>
+          <div class="translation-line">That is a pair (couple).</div>
+        </div>
+
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">5. Common Usage</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="对不起，我迟到了。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: duìbuqǐ (sorry)"><span class="char" data-m="duì (face)">对</span><span class="char" data-m="bu (not)">不</span><span class="char" data-m="qǐ (rise)">起</span></span>，
+              <span class="char" data-m="wǒ (I)">我</span>
+              <span class="word" data-m="WORD: chídào (arrive late)"><span class="char" data-m="chí (late)">迟</span><span class="char" data-m="dào (arrive)">到</span></span>
+              <span class="char" data-m="le (past)">了</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Duìbuqǐ,</span> <span class="py">wǒ</span> <span class="py">chídào</span> <span class="py">le.</span></div>
+          <div class="translation-line">Sorry, I am late.</div>
+        </div>
+      `
+    },
+
+    // ── ADD MORE CARDS BELOW ────────────────────────────────────────
+    // Copy the block above, change id/hanzi/pinyin/backHTML, done!
+
+    {
+      id: 'hao',
+      hanzi: '好',
+      pinyin: 'hǎo',
+      backHTML: `
+        <div class="mm-header">
+          <div class="char-main">好</div>
+          <div class="subhead">hǎo • Meaning Map</div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="meaning-item">
+          <span class="label">1. Good / Fine / Well</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="今天天气很好。">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: jīntiān (today)"><span class="char" data-m="jīn (now)">今</span><span class="char" data-m="tiān (day)">天</span></span>
+              <span class="word" data-m="WORD: tiānqì (weather)"><span class="char" data-m="tiān (sky)">天</span><span class="char" data-m="qì (air)">气</span></span>
+              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="hǎo (good)">好</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Jīntiān</span> <span class="py">tiānqì</span> <span class="py">hěn</span> <span class="py">hǎo.</span></div>
+          <div class="translation-line">Today's weather is very good.</div>
+        </div>
+
+        <div class="meaning-item">
+          <span class="label">2. Greeting: Hello</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="你好！">
+            <div class="sentence-box">
+              <span class="word" data-m="WORD: nǐhǎo (hello)"><span class="char" data-m="nǐ (you)">你</span><span class="char" data-m="hǎo (well)">好</span></span>！
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Nǐ</span> <span class="py">hǎo!</span></div>
+          <div class="translation-line">Hello! (lit. "You good!")</div>
+        </div>
+
+        <div class="meaning-item" style="margin-bottom:0">
+          <span class="label">3. Easy to do</span>
+          <div class="sentence-wrap" data-clickcopy="true" data-copy="这道题很好做。">
+            <div class="sentence-box">
+              <span class="char" data-m="zhè (this)">这</span>
+              <span class="word" data-m="WORD: dàotí (problem)"><span class="char" data-m="dào (measure word)">道</span><span class="char" data-m="tí (question)">题</span></span>
+              <span class="char" data-m="hěn (very)">很</span><span class="char" data-m="hǎo (easy)">好</span><span class="char" data-m="zuò (do)">做</span>。
+            </div>
+          </div>
+          <div class="pinyin-line"><span class="py">Zhè</span> <span class="py">dào tí</span> <span class="py">hěn</span> <span class="py">hǎo</span> <span class="py">zuò.</span></div>
+          <div class="translation-line">This problem is easy to do.</div>
+        </div>
+      `
+    }
+
+  ]; // ← end of CARDS array
+
+
+  // ════════════════════════════════════════════════════════════════
+  //  SM-2 SCHEDULER
+  // ════════════════════════════════════════════════════════════════
+  const STORE_KEY = 'hanzi_flash_v1';
+
+  function loadState()         { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e) { return {}; } }
+  function saveState(s)        { localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+  function getCS(state, id)    { return state[id] || { interval: 0, ease: 2.5, reps: 0, due: 0 }; }
+
+  function sm2(cs, rating) {
+    let { interval, ease, reps } = cs;
+    if (rating === 0) {
+      interval = 1; reps = 0;
+    } else {
+      if      (reps === 0) interval = 1;
+      else if (reps === 1) interval = 6;
+      else                 interval = Math.round(interval * ease);
+      reps++;
+      ease = Math.max(1.3, ease + [-0.15, -0.08, 0, 0.15][rating]);
+      if (rating === 1) interval = Math.max(1, Math.round(interval * 0.5));
+      if (rating === 3) interval = Math.round(interval * 1.3);
+    }
+    return { interval, ease, reps, due: Date.now() + interval * 86400000 };
+  }
+
+  function fmtInterval(cs, rating) {
+    const d = sm2({ ...cs }, rating).interval;
+    if (d < 1)   return '<1d';
+    if (d < 30)  return d + 'd';
+    if (d < 365) return Math.round(d/30) + 'mo';
+    return Math.round(d/365) + 'yr';
+  }
+
+  function getDue(state) {
+    const now = Date.now();
+    return CARDS.filter(c => getCS(state, c.id).due <= now);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  APP STATE
+  // ════════════════════════════════════════════════════════════════
+  let appState = loadState();
+  let queue    = [];
+  let qIdx     = 0;
+  let curCard  = null;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ── HOME ──
+  function renderHome() {
+    appState = loadState();
+    document.getElementById('stat-due').textContent     = getDue(appState).length;
+    document.getElementById('stat-total').textContent   = CARDS.length;
+    document.getElementById('stat-learned').textContent = CARDS.filter(c => getCS(appState, c.id).reps > 0).length;
+    showScreen('screen-home');
+  }
+
+  document.getElementById('btn-start').addEventListener('click', () => {
+    appState = loadState();
+    queue = getDue(appState);
+    if (!queue.length) { showScreen('screen-done'); return; }
+    qIdx = 0;
+    showFront();
+  });
+
+  document.getElementById('btn-home').addEventListener('click', renderHome);
+
+  // ── FRONT ──
+  function updateProgress() {
+    const pct = queue.length ? (qIdx / queue.length) * 100 : 0;
+    document.getElementById('progress-fill').style.width      = pct + '%';
+    document.getElementById('progress-fill-back').style.width = pct + '%';
+  }
+
+  function showFront() {
+    curCard = queue[qIdx];
+    document.getElementById('front-hanzi').textContent  = curCard.hanzi;
+    document.getElementById('front-pinyin').textContent = curCard.pinyin;
+    updateProgress();
+    doClearCanvas();
+    showScreen('screen-front');
+  }
+
+  document.getElementById('btn-show-answer').addEventListener('click', showBack);
+
+  // ── BACK ──
+  function showBack() {
+    document.getElementById('meaning-map-content').innerHTML = curCard.backHTML;
+    const cs = getCS(appState, curCard.id);
+    ['again','hard','good','easy'].forEach((n,i) => {
+      document.getElementById('ivl-' + n).textContent = fmtInterval(cs, i);
+    });
+    updateProgress();
+    showScreen('screen-back');
+    wireBackInteractions();
+  }
+
+  document.querySelectorAll('.rating-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rating = parseInt(btn.dataset.rating);
+      appState[curCard.id] = sm2(getCS(appState, curCard.id), rating);
+      saveState(appState);
+      qIdx++;
+      qIdx >= queue.length ? showScreen('screen-done') : showFront();
+    });
+  });
+
+  // ── TOAST & COPY ──
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
+  }
+
+  async function copyText(text) {
+    try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; } } catch(e) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
+    } catch(e) { return false; }
+  }
+
+  function wireBackInteractions() {
+    const map = document.getElementById('meaning-map-content');
+
+    map.querySelector('.char-main')?.addEventListener('click', async e => {
+      e.stopPropagation();
+      const txt = e.currentTarget.textContent.trim();
+      showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
+    });
+
+    map.querySelectorAll('.char').forEach(ch => {
+      ch.addEventListener('click', async e => {
+        e.stopPropagation();
+        const txt = ch.textContent.trim();
+        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
+      });
+    });
+
+    map.querySelectorAll('.word').forEach(w => {
+      w.addEventListener('click', async e => {
+        if (e.target.closest('.char')) return;
+        e.stopPropagation();
+        const txt = w.textContent.replace(/\s+/g,'').trim();
+        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
+      });
+    });
+
+    map.querySelectorAll('.sentence-wrap[data-clickcopy]').forEach(wrap => {
+      wrap.addEventListener('click', async e => {
+        if (e.target.closest('.word') || e.target.closest('.char')) return;
+        const txt = wrap.dataset.copy || '';
+        showToast((await copyText(txt)) ? 'Copied: ' + txt : 'Copy failed');
+      });
+    });
+
+    map.querySelectorAll('.word .char').forEach(ch => {
+      const addSuppress    = () => ch.closest('.word')?.classList.add('suppress-word-tooltip');
+      const removeSuppress = () => ch.closest('.word')?.classList.remove('suppress-word-tooltip');
+      ch.addEventListener('mouseenter', addSuppress);
+      ch.addEventListener('mouseleave', removeSuppress);
+      ch.addEventListener('touchstart', () => { addSuppress(); setTimeout(removeSuppress, 800); }, { passive: true });
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  DRAWING PAD
+  // ════════════════════════════════════════════════════════════════
+  (function initDrawPad() {
+    const canvas   = document.getElementById('drawingCanvas');
+    const clearBtn = document.getElementById('clearDrawBtn');
+    const undoBtn  = document.getElementById('undoDrawBtn');
+    const ctx      = canvas.getContext('2d');
+    let isDrawing  = false;
+    let rawPoints  = [];
+    let undoStack  = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+
+    function applyStyle() {
+      ctx.lineWidth = 14; ctx.lineCap = 'square'; ctx.lineJoin = 'miter'; ctx.miterLimit = 10;
+      ctx.strokeStyle = '#4d90d6'; ctx.shadowColor = 'rgba(60,120,210,0.45)'; ctx.shadowBlur = 8;
+    }
+    applyStyle();
+
+    function getCoords(e) {
+      const r = canvas.getBoundingClientRect();
+      const sx = canvas.width / r.width, sy = canvas.height / r.height;
+      const s = e.touches?.length ? e.touches[0] : e;
+      return { x: (s.clientX - r.left) * sx, y: (s.clientY - r.top) * sy };
+    }
+
+    const restore = snap => ctx.putImageData(snap, 0, 0);
+    const snap    = ()   => ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    function chaikin(pts, passes) {
+      let r = pts;
+      for (let p = 0; p < (passes||3); p++) {
+        const n = [r[0]];
+        for (let i = 0; i < r.length-1; i++) {
+          const a = r[i], b = r[i+1];
+          n.push({ x:.75*a.x+.25*b.x, y:.75*a.y+.25*b.y });
+          n.push({ x:.25*a.x+.75*b.x, y:.25*a.y+.75*b.y });
+        }
+        n.push(r[r.length-1]); r = n;
+      }
+      return r;
+    }
+
+    function catmullSeg(p0,p1,p2,p3) {
+      ctx.bezierCurveTo(
+        p1.x+(p2.x-p0.x)/3, p1.y+(p2.y-p0.y)/3,
+        p2.x-(p3.x-p1.x)/3, p2.y-(p3.y-p1.y)/3,
+        p2.x, p2.y
+      );
+    }
+
+    function drawLivePreview(pts) {
+      if (pts.length < 2) return;
+      const s = chaikin(pts,3);
+      const g0 = {x:2*s[0].x-s[1].x, y:2*s[0].y-s[1].y};
+      const gN = {x:2*s[s.length-1].x-s[s.length-2].x, y:2*s[s.length-1].y-s[s.length-2].y};
+      const all = [g0,...s,gN];
+      ctx.beginPath(); ctx.moveTo(all[1].x, all[1].y);
+      if (all.length<=3) ctx.lineTo(all[all.length-2].x, all[all.length-2].y);
+      else for (let i=1;i<all.length-2;i++) catmullSeg(all[i-1],all[i],all[i+1],all[i+2]);
+      ctx.stroke();
+    }
+
+    function beautifyAndDraw(pts) {
+      if (pts.length < 2) return;
+      const p0 = pts[0], pN = pts[pts.length-1];
+      const arc = [0];
+      for (let i=1;i<pts.length;i++) {
+        const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+        arc.push(arc[i-1]+Math.sqrt(dx*dx+dy*dy));
+      }
+      const total = arc[arc.length-1];
+      if (total < 2) { ctx.beginPath(); ctx.arc(p0.x,p0.y,3,0,Math.PI*2); ctx.fillStyle='#4d90d6'; ctx.fill(); return; }
+      const tArr = arc.map(l => l/total);
+      const cdx=pN.x-p0.x, cdy=pN.y-p0.y, cLen=Math.sqrt(cdx*cdx+cdy*cdy);
+      let maxDev=0;
+      for (let j=1;j<pts.length-1;j++) {
+        const ex=pts[j].x-p0.x, ey=pts[j].y-p0.y;
+        const dev = cLen<1 ? Math.sqrt(ex*ex+ey*ey) : Math.abs(ex*cdy-ey*cdx)/cLen;
+        if (dev>maxDev) maxDev=dev;
+      }
+      applyStyle();
+      if (cLen<1 || maxDev/cLen<0.10) {
+        ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.lineTo(pN.x,pN.y); ctx.stroke(); return;
+      }
+      let sx=0,sy=0,sw=0;
+      for (let k=1;k<pts.length-1;k++) {
+        const ti=tArr[k], wi=2*ti*(1-ti);
+        if (wi<1e-4) continue;
+        sx+=wi*(pts[k].x-(1-ti)*(1-ti)*p0.x-ti*ti*pN.x);
+        sy+=wi*(pts[k].y-(1-ti)*(1-ti)*p0.y-ti*ti*pN.y);
+        sw+=wi*wi;
+      }
+      const P1 = sw<1e-6 ? {x:(p0.x+pN.x)/2,y:(p0.y+pN.y)/2} : {x:sx/sw,y:sy/sw};
+      ctx.beginPath(); ctx.moveTo(p0.x,p0.y); ctx.quadraticCurveTo(P1.x,P1.y,pN.x,pN.y); ctx.stroke();
+    }
+
+    const onStart = e => { e.preventDefault(); isDrawing=true; rawPoints=[getCoords(e)]; };
+    const onMove  = e => {
+      if (!isDrawing) return; e.preventDefault();
+      const c=getCoords(e), last=rawPoints[rawPoints.length-1];
+      const dx=c.x-last.x, dy=c.y-last.y;
+      if (dx*dx+dy*dy<4) return;
+      rawPoints.push(c);
+      restore(undoStack[undoStack.length-1]); applyStyle(); drawLivePreview(rawPoints);
+    };
+    const onEnd = () => {
+      if (!isDrawing) return; isDrawing=false;
+      restore(undoStack[undoStack.length-1]); beautifyAndDraw(rawPoints);
+      undoStack.push(snap()); rawPoints=[];
+    };
+
+    canvas.addEventListener('mousedown',  onStart);
+    canvas.addEventListener('mousemove',  onMove);
+    canvas.addEventListener('mouseup',    onEnd);
+    canvas.addEventListener('mouseleave', onEnd);
+    canvas.addEventListener('touchstart', onStart, {passive:false});
+    canvas.addEventListener('touchmove',  onMove,  {passive:false});
+    canvas.addEventListener('touchend',   onEnd);
+    canvas.addEventListener('touchcancel',onEnd);
+
+    undoBtn.addEventListener('click', () => {
+      if (undoStack.length>1) { undoStack.pop(); restore(undoStack[undoStack.length-1]); }
+    });
+
+    clearBtn.addEventListener('click', doClearCanvas);
+
+    window._clearCanvas = () => {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      undoStack=[snap()]; rawPoints=[];
+    };
+  })();
+
+  function doClearCanvas() { window._clearCanvas?.(); }
+
+  // ════════════════════════════════════════════════════════════════
+  //  SERVICE WORKER
+  // ════════════════════════════════════════════════════════════════
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW registration failed:', e));
+  }
+
+  // ── INIT ──
+  renderHome();
+  </script>
+</body>
+</html>
